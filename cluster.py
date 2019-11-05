@@ -77,7 +77,7 @@ def plot_confusion_matrix(y_true, y_pred, classes,
     fig.tight_layout()
     return ax
 
-def evaluate(true_labs, pred_labs, X, labels):
+def evaluate(true_labs, pred_labs, X, labels): # evaluate WRT income, sex
 
 	ajd_rand = skm.adjusted_rand_score(true_labs, pred_labs)
 	norm_info = skm.normalized_mutual_info_score(true_labs, pred_labs)
