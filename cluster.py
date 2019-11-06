@@ -7,6 +7,7 @@ from sklearn.datasets import load_digits
 from sklearn.cluster import KMeans
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.cluster import AffinityPropagation
+from sklearn.cluster import SpectralClustering
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import fowlkes_mallows_score
 from sklearn.decomposition import PCA
@@ -27,7 +28,7 @@ def compute_centroids(data, classes):
 
     return centroid_list
 
-def evaluate(true_labs, pred_labs, data = data, train_time): # evaluate WRT sex
+def evaluate(true_labs, pred_labs, data, k): # evaluate WRT sex
 
 	ajd_rand = skm.adjusted_rand_score(true_labs, pred_labs)
 	norm_info = skm.normalized_mutual_info_score(true_labs, pred_labs)
@@ -36,7 +37,8 @@ def evaluate(true_labs, pred_labs, data = data, train_time): # evaluate WRT sex
 	complete = skm.completeness_score(true_labs, pred_labs)
 	v_measure = skm.v_measure_score(true_labs, pred_labs)
 	cont_mat = skm.cluster.contingency_matrix(true_labs, pred_labs)
-    silhuoette = skm.silhuoette_score(data, cluster_labs)
+
+    silhuoette = skm.silhuoette_score(data, cluster_labs) # need to verify arguments on this
     
     # Correlation Cluster Validity
     # pairwise row-distances matrix (entry i,j is the distance from point i to point j of data)
@@ -46,7 +48,8 @@ def evaluate(true_labs, pred_labs, data = data, train_time): # evaluate WRT sex
     # correlation of elements of prox_mat and match_mat, ideally close to -1:
     clus_cor = np.corr(prox_mat, match_mat)
 
-	return [adj_rand, norm_info, adj_info, homog, complete, v_measure, silhuoette, clus_cor, train_time], cont_mat
+	return [k, adj_rand, norm_info, adj_info, homog, complete, v_measure, silhuoette, clus_cor], cont_mat
+
 
 def visualization(data, classes):
 
@@ -66,37 +69,153 @@ def visualization(data, classes):
     plt.plot(x = PC1, y = PC2, color = classes, legend = classes)
     plt.show()
 
-# method_evaluation should return metrics over a large potential number of K's
-def method_evaluation(data, method, target = 'sex'):
 
-    score_matrix = np.zeros((50, 9))
+# this will turn arbitrary cluster labelling [clus1, clus2, ..] into the same type as our target (1 male 0 female) by getting the mode target of each cluster
+def clusters_to_labels_voting(data = full_data, labels, target = 'sex'):
+
+    method_pred_labs = []
+
+    for clus in set(labels): # for each cluster
+
+        subset = data[target] == clus # just get the data in that cluster
+        true_label_mode = subset.mode[target] # get the mode target in that cluster
+        subset_pred_vec = [true_label_mode] * subset.shape[0] # each element of subset gets the same modal label
+        method_pred_labs.extend(subset_pred_vec) # use extend to concatenate this ckuster's output
+
+    return method_pred_labs
+
+
+# method_evaluation should create, display, and select best scoring K across methods
+def method_evaluation(data, target = 'sex', optimization_metric = 'Silhuoette'):
+
+    full_data = data.copy() # we need full data (no drop target) for the mode-voting
 
     target_data = data.loc[:, target]
-    target_names = [str(x) for x in target_data.unique().tolist()]
+    target_names = [str(x) for x in target_data.unique().tolist()] # i still dont know what this is
+
+    true_labs = target_data
+
     data = data.drop(columns=target)
 
-    index = 1
+    for k in range(1, 101):
 
-    t1 = time.perf_counter()
+        # Kmeans
+        kmeans = KMeans(n_clusters = k).fit(data) #random state = 0 ?
+        print(kmeans.labels_)
+        kmeans_clus_labels = kmeans.labels_
+        print(kmeans.predict(data))
+        print(kmeans.cluster_centers_)
 
-    for k in range(1, 51):
-        obs_clus_labels = method.fit_predict(data)
+        # Agglom
+        agglom = AgglomerativeClustering(n_clusters = k).fit(data)
+        print(agglom.labels_)
+        agglom_clus_labels = agglom.labels_
 
-    train_time = time.perf_counter() - t1
-        
-    #pred_target = method.predict(data_test)
-    pred_label = get_cluster_modes()
+        # DBSCAN
+        # eps is the ball radius around points. remember our space is in high dimension, but scaled to 0,1. so this is fucked
+        core_samples, labels = DBSCAN(data, eps = .05, min_samples = k) #takes eps and min_samples (within eps), returns indicies of core samples and labels
+        print(core_samples, labels) #core_samples: indices of core samples, array[n_core_samples], labels: cluster labs for each pt, array[n_samples]
+        dbscan_clus_labels = labels
 
-    metrics_row, _ = evaluate(true_labs, pred_labs, data, train_time)
-          
-    for i in range(len(metrics_row)):
-        score_matrix.iloc[index-1, i] = metrics_row[i]
+        # Spectral Clustering
+        spectral = SpectralClustering(n_clusters = k)
+        print(spectral.labels_)
+        spectral_clus_labels = spectral.labels_
 
-    index += 1
+        kmeans_pred_labs = clusters_to_labels_voting(full_data, kmeans_clus_labels)
+        agglom_pred_labs = clusters_to_labels_voting(full_data, agglom_clus_labels)
+        dbscan_pred_labs = clusters_to_labels_voting(full_data, dbscan_clus_labels)
+        spectral_pred_labs = clusters_to_labels_voting(full_data, spectral_clus_labels)
 
-    print(score_matrix)
+        # evaluate returns a tuple: a list of scores and a matrix. ignoring matrix
+        kmeans_k_score.append(evaluate(true_labs, kmeans_pred_labs, data, k)[0]) # only taking the list of scores because im not gonna mess w matrix
+        agglom_k_score.append(evaluate(true_labs, agglom_pred_labs, data, k)[0])
+        dbscan_k_score.append(evaluate(true_labs, dbscan_pred_labs, data, k)[0])
+        spectral_k_score.append(evaluate(true_labs, spectral_pred_labs, data, k)[0])
 
-    return score_matrix, recc__k
+    print('K-Means Clustering Scores per K: ')
+    print(kmeans_k_score) # print the table of scores
+    pyplot.plot(x = range(1, 101), y = kmeans_k_score[7]) # print some cute little graph of score per K?
+    pyplot.show()
+
+    # CAN MAKE SKREE PLOTS HERE AS PART OF CLUSTERING ANALYSIS
+    # COULD CALL THE VISUALIZATIONS FUNCTION IN HERE TOO
+
+    print('Agglomerative Clustering Scores per K: ')
+    print(agglom_k_score)
+    pyplot.plot(x = range(1, 101), y = agglom_k_score[7])
+    pyplot.show()
+
+    # CAN MAKE SKREE PLOTS HERE AS PART OF CLUSTERING ANALYSIS
+    # COULD CALL THE VISUALIZATIONS FUNCTION IN HERE TOO
+
+    print('DBSCAN Clustering Scores per K: ')
+    print(dbscan_k_score)
+    pyplot.plot(x = range(1, 101), y = dbscan_k_score[7])
+    pyplot.show()
+
+    # CAN MAKE SKREE PLOTS HERE AS PART OF CLUSTERING ANALYSIS
+    # COULD CALL THE VISUALIZATIONS FUNCTION IN HERE TOO
+
+    print('Spectral Clustering Scores per K: ')
+    print(spectral_k_score)
+    pyplot.plot(x = range(1, 101), y = spectral_k_score[7])
+    pyplot.show()
+
+    # CAN MAKE SKREE PLOTS HERE AS PART OF CLUSTERING ANALYSIS
+    # COULD CALL THE VISUALIZATIONS FUNCTION IN HERE TOO
+
+    print('==============================================')
+
+    kmeans_best_k = np.argmin(kmeans_k_score[].silhuoette_scores) # "Which K got the lowest silhuoette score for this method?" <- silhguoete could be argument
+    agglom_best_k = np.argmin(agglom_k_score[].silhuoette_scores)
+    dbscan_best_k = np.argmin(dbscan_k_score[].silhuoette_scores)
+    spectral_best_k = np.argmin(spectral_k_score[].silhuoette_scores)
+
+
+    print('Optimal K selected per method selected by Silhuoette: ')
+    print()
+    print('Kmeans Clustering selects K = ', kmeans_best_k)
+
+    print('Agglom Clustering selects K = ', agglom_best_k)
+
+    print('DBSCAN Clustering selects K = ', dbscan_best_k)
+
+    print('Spectral Clusters selects K = ', spectral_best_k)
+
+    return kmeans_best_k, agglom_best_k, dbscan_best_k, spectral_best_k
+
+if __name__ == '__main__':
+
+    main(k)
+
+    # lets just load and scale the data here
+    data = pd.read_csv('data/clean_census_income.csv')
+    mms = sklearn.preprocessing.MinMaxScaler()
+    data = mms.fit_transform(data)
+
+    # Use Method_Evaluation to find optimal K (currently according to SILHUOETTE, but could be any metric)
+    kmeans_k, agglom_k, dbscan_n, spectral_k = method_evaluation(data, 'sex') # could make argument for which Metric u want optimal K for
+
+    # Optimized K-means
+    kmeans = KMeans(n_clusters = kmeans_k).fit(data)
+    visualization(data, kmeans.labels_)
+    
+    # Optimized Agglomerative Clustering
+    agglom = AgglomerativeClustering(n_clusters = agglom_k)
+    visualization(data, agglom.labels_)
+    
+    # Optimized DBSCAN Clustering
+    _, dbscan_labels = DBSCAN(data, eps = .05, min_samples = dbscan_n) #this .05 needs to match the one used in method_evulation(), which we should experiment with
+    visualization(data, dbscan_labels)
+
+    # ADV TOPIC: Optimized Spectral Clustering
+    spectral = SpectralClustering(n_clusters = spectral_k)
+    visualization(data, spectral.labels_)
+
+
+
+
 
 #def main(k):
 #    data, target = load_digits(return_X_y=True)
@@ -149,45 +268,6 @@ def method_evaluation(data, method, target = 'sex'):
 #    print('  Fowlkes-Mallows score: {}'.format(fowlkes_mallows_score(target, pred_target)))
 #    plot_confusion_matrix(target, pred_target, class_names, title='Agglomerative Confusion Matrix')
 #    plt.show()
-
-if __name__ == '__main__':
-
-    main(k)
-
-    # lets just load and scale the data here
-    data = pd.read_csv('data/clean_census_income.csv')
-    mms = sklearn.preprocessing.MinMaxScaler()
-    data = mms.fit_transform(data)
-
-    # Kmeans Clustering
-    learn_k = method_evaluation(data, Kmeans)
-
-    classes = do_kmeans(data, learn_k)
-
-    visualization(data, classes)
-    #
-    # Hierarchical Clustering (Agglomerative Clustering)
-    learn_k = method_evaluation(data, AgglomerativeClustering(variable_args))
-
-    classes = do_kmeans(data, learn_k)
-
-    visualization(data, classes)
-    
-    # DBSCAN Clustering
-    learn_k = method_evaluation(data, DBSCAN(variable_args))
-
-    classes = do_kmeans(data, learn_k)
-
-    visualization(data, classes)
-
-    # ADV TOPIC: Spectral Clustering
-    learn_k = method_evaluation(data, SpectralClustering(variable_args))
-
-    classes = do_kmeans(data, learn_k)
-
-    visualization(data, classes)
-
-
 
 
 
