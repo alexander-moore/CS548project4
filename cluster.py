@@ -39,8 +39,11 @@ def evaluate(true_labs, pred_labs, data = data, train_time): # evaluate WRT sex
     silhuoette = skm.silhuoette_score(data, cluster_labels)
     
     # Correlation Cluster Validity
-    prox_mat = PROX???(data)
+    # pairwise row-distances matrix (entry i,j is the distance from point i to point j of data)
+    prox_mat = pd.DataFrame(distance_matrix(data.values, data.values), index = data.index, columns = data.index)
+    # match matrix: entry i,j is 1 if observation i and j share a cluster, 1 otherwise
     match_mat = MATCH???(data)
+    # correlation of elements of prox_mat and match_mat, ideally close to -1:
     clus_cor = np.corr(prox_mat, match_mat)
 
 	return [adj_rand, norm_info, adj_info, homog, complete, v_measure, silhuoette, clus_cor, train_time], cont_mat
@@ -151,7 +154,7 @@ if __name__ == '__main__':
 
     main(k)
 
-    # lets just load and scale the data
+    # lets just load and scale the data here
     data = pd.read_csv('data/clean_census_income.csv')
     mms = sklearn.preprocessing.MinMaxScaler()
     data = mms.fit_transform(data)
@@ -164,10 +167,28 @@ if __name__ == '__main__':
     visualization(data, classes)
     #
     # Hierarchical Clustering (Agglomerative Clustering)
-    #
-    # DBSCAN Clustering
+    learn_k = method_evaluation(data, AgglomerativeClustering(variable_args))
 
-# sklearn.manifold.MDS
+    classes = do_kmeans(data, learn_k)
+
+    visualization(data, classes)
+    
+    # DBSCAN Clustering
+    learn_k = method_evaluation(data, DBSCAN(variable_args))
+
+    classes = do_kmeans(data, learn_k)
+
+    visualization(data, classes)
+
+    # ADV TOPIC: Spectral Clustering
+    learn_k = method_evaluation(data, SpectralClustering(variable_args))
+
+    classes = do_kmeans(data, learn_k)
+
+    visualization(data, classes)
+
+
+
 
 
 
