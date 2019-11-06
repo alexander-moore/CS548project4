@@ -1,15 +1,19 @@
 #! /usr/bin/env python3
 # cluster.py
 import sklearn.metrics as skm
+
+from sklearn import preprocessing
 from sklearn.datasets import load_digits
 from sklearn.cluster import KMeans
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.cluster import AffinityPropagation
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import fowlkes_mallows_score
+from sklearn.decomposition import PCA
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 
 def plot_confusion_matrix(y_true, y_pred, classes,
@@ -90,7 +94,20 @@ def evaluate(true_labs, pred_labs, X, labels): # evaluate WRT income, sex
 
 	return [adj_rand, norm_info, adj_info, homog, complete, v_measure, silhuoette], cont_mat
 
-def visualization(data, target, method, k):
+def visualization(data, classes):
+
+    ## Convert Data to PC2
+    mms = preprocessing.MinMaxScaler()
+    data = mms.fit_transform(data)
+
+    pca = PCA(n_components = 2).
+    pca_data = pca.fit_transform(data)
+
+    pca_df = pd.DataFrame(pca_data, columns = ['PC_1', 'PC_2'])
+
+    ## Visualize
+
+
     pass
 
 def evaluation(data, target, method, k):
