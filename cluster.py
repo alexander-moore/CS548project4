@@ -107,10 +107,12 @@ def visualization(data, classes):
 
     ## Visualize
 
+    plot(x = PC1, y = PC2, col = classes)
+
 
     pass
 
-def evaluation(data, target, method, k):
+def evaluation(data, target, method, n_splits):
     # separate into test and train
     target_data = data.loc[:, target]
     target_names = [str(x) for x in target_data.unique().tolist()]
@@ -130,7 +132,7 @@ def evaluation(data, target, method, k):
 
     index = 1
 
-    kf = StratifiedKFold(n_splits=k)
+    kf = StratifiedKFold(n_splits=n_splits)
     for train_index, test_index in kf.split(data, target_data):
         print('Split: {}'.format(index))
         #print('Train:', train_index, 'Test:', test_index)
@@ -222,7 +224,14 @@ def evaluation(data, target, method, k):
 if __name__ == '__main__':
     k = 10
     main(k)
+    data = pd.read_csv('data/clean_census_income.csv')
+
     # Kmeans Clustering
+    learn_k = evaluation(data)
+
+    classes = do_kmeans(data, learn_k)
+
+    visualization(data, classes)
     #
     # Hierarchical Clustering (Agglomerative Clustering)
     #
