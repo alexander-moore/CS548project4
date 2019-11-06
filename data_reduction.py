@@ -46,3 +46,7 @@ print('we will use rotations later: ', pca_full.components_)
 # plotting shows 12 to be a good number of components
 #plt.plot(pca_full.explained_variance_ratio_)
 #plt.show()
+df = pd.read_csv('data/pca2_data.csv')
+
+plt.plot(df['PC_1'], df['PC_2'])
+plt.show()
