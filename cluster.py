@@ -36,7 +36,7 @@ def evaluate(true_labs, pred_labs, data = data, train_time): # evaluate WRT sex
 	complete = skm.completeness_score(true_labs, pred_labs)
 	v_measure = skm.v_measure_score(true_labs, pred_labs)
 	cont_mat = skm.cluster.contingency_matrix(true_labs, pred_labs)
-    silhuoette = skm.silhuoette_score(data, cluster_labels)
+    silhuoette = skm.silhuoette_score(data, cluster_labs)
     
     # Correlation Cluster Validity
     # pairwise row-distances matrix (entry i,j is the distance from point i to point j of data)
