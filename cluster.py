@@ -135,57 +135,9 @@ def method_evaluation(data, target = 'sex', optimization_metric = 'Silhuoette'):
         dbscan_k_score.append(evaluate(true_labs, dbscan_pred_labs, data, compute_centroids(full_data, agglom_clus_labels), k)[0])
         spectral_k_score.append(evaluate(true_labs, spectral_pred_labs, data, compute_centroids(full_data, agglom_clus_labels), k)[0])
 
-    print('K-Means Clustering Scores per K: ')
-    print(kmeans_k_score) # print the table of scores
-    pyplot.plot(x = range(1, 101), y = kmeans_k_score[7]) # print some cute little graph of score per K?
-    pyplot.show()
-
-    # CAN MAKE SKREE PLOTS HERE AS PART OF CLUSTERING ANALYSIS
-    # COULD CALL THE VISUALIZATIONS FUNCTION IN HERE TOO
-
-    print('Agglomerative Clustering Scores per K: ')
-    print(agglom_k_score)
-    pyplot.plot(x = range(1, 101), y = agglom_k_score[7])
-    pyplot.show()
-
-    # CAN MAKE SKREE PLOTS HERE AS PART OF CLUSTERING ANALYSIS
-    # COULD CALL THE VISUALIZATIONS FUNCTION IN HERE TOO
-
-    print('DBSCAN Clustering Scores per K: ')
-    print(dbscan_k_score)
-    pyplot.plot(x = range(1, 101), y = dbscan_k_score[7])
-    pyplot.show()
-
-    # CAN MAKE SKREE PLOTS HERE AS PART OF CLUSTERING ANALYSIS
-    # COULD CALL THE VISUALIZATIONS FUNCTION IN HERE TOO
-
-    print('Spectral Clustering Scores per K: ')
-    print(spectral_k_score)
-    pyplot.plot(x = range(1, 101), y = spectral_k_score[7])
-    pyplot.show()
-
-    # CAN MAKE SKREE PLOTS HERE AS PART OF CLUSTERING ANALYSIS
-    # COULD CALL THE VISUALIZATIONS FUNCTION IN HERE TOO
-
-    print('==============================================')
-
-    kmeans_best_k = np.argmin(kmeans_k_score[].silhuoette_scores) # "Which K got the lowest silhuoette score for this method?" <- silhguoete could be argument
-    agglom_best_k = np.argmin(agglom_k_score[].silhuoette_scores)
-    dbscan_best_k = np.argmin(dbscan_k_score[].silhuoette_scores)
-    spectral_best_k = np.argmin(spectral_k_score[].silhuoette_scores)
 
 
-    print('Optimal K selected per method selected by Silhuoette: ')
-    print()
-    print('Kmeans Clustering selects K = ', kmeans_best_k)
-
-    print('Agglom Clustering selects K = ', agglom_best_k)
-
-    print('DBSCAN Clustering selects K = ', dbscan_best_k)
-
-    print('Spectral Clusters selects K = ', spectral_best_k)
-
-    return kmeans_best_k, agglom_best_k, dbscan_best_k, spectral_best_k
+    return kmeans_k_score, agglom_k_score, dbscan_k_score, spectral_k_score # just return ENTIRE MATRICES ( 4 PD DATA FRAMES OF N_K x N_METRICS)
 
 if __name__ == '__main__':
 
@@ -272,6 +224,57 @@ if __name__ == '__main__':
 #    plt.show()
 
 
+
+
+    print('K-Means Clustering Scores per K: ')
+    print(kmeans_k_score) # print the table of scores
+    pyplot.plot(x = range(1, 101), y = kmeans_k_score[7]) # print some cute little graph of score per K?
+    pyplot.show()
+
+    # CAN MAKE SKREE PLOTS HERE AS PART OF CLUSTERING ANALYSIS
+    # COULD CALL THE VISUALIZATIONS FUNCTION IN HERE TOO
+
+    print('Agglomerative Clustering Scores per K: ')
+    print(agglom_k_score)
+    pyplot.plot(x = range(1, 101), y = agglom_k_score[7])
+    pyplot.show()
+
+    # CAN MAKE SKREE PLOTS HERE AS PART OF CLUSTERING ANALYSIS
+    # COULD CALL THE VISUALIZATIONS FUNCTION IN HERE TOO
+
+    print('DBSCAN Clustering Scores per K: ')
+    print(dbscan_k_score)
+    pyplot.plot(x = range(1, 101), y = dbscan_k_score[7])
+    pyplot.show()
+
+    # CAN MAKE SKREE PLOTS HERE AS PART OF CLUSTERING ANALYSIS
+    # COULD CALL THE VISUALIZATIONS FUNCTION IN HERE TOO
+
+    print('Spectral Clustering Scores per K: ')
+    print(spectral_k_score)
+    pyplot.plot(x = range(1, 101), y = spectral_k_score[7])
+    pyplot.show()
+
+    # CAN MAKE SKREE PLOTS HERE AS PART OF CLUSTERING ANALYSIS
+    # COULD CALL THE VISUALIZATIONS FUNCTION IN HERE TOO
+
+    print('==============================================')
+
+    kmeans_best_k = np.argmin(kmeans_k_score[].silhuoette_scores) # "Which K got the lowest silhuoette score for this method?" <- silhguoete could be argument
+    agglom_best_k = np.argmin(agglom_k_score[].silhuoette_scores)
+    dbscan_best_k = np.argmin(dbscan_k_score[].silhuoette_scores)
+    spectral_best_k = np.argmin(spectral_k_score[].silhuoette_scores)
+
+
+    print('Optimal K selected per method selected by Silhuoette: ')
+    print()
+    print('Kmeans Clustering selects K = ', kmeans_best_k)
+
+    print('Agglom Clustering selects K = ', agglom_best_k)
+
+    print('DBSCAN Clustering selects K = ', dbscan_best_k)
+
+    print('Spectral Clusters selects K = ', spectral_best_k)
 
 
 def plot_confusion_matrix(y_true, y_pred, classes,
