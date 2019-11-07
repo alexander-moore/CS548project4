@@ -1,6 +1,8 @@
+#! /usr/bin/env python3
 # data preprocessing
 from sklearn.decomposition import PCA
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 from sklearn import preprocessing
 
@@ -41,12 +43,13 @@ pcad_full = pd.DataFrame(pca_full.fit_transform(data))
 print(pca_full)
 #print(pca_full.explained_variance_)
 print(pca_full.explained_variance_ratio_[0:10])
+print(np.sum(pca_full.explained_variance_ratio_[0:12]))
 print('we will use rotations later: ', pca_full.components_)
 
 # plotting shows 12 to be a good number of components
-#plt.plot(pca_full.explained_variance_ratio_)
-#plt.show()
-df = pd.read_csv('data/pca2_data.csv')
-
-plt.plot(df['PC_1'], df['PC_2'])
+plt.plot(pca_full.explained_variance_ratio_)
 plt.show()
+#df = pd.read_csv('data/pca2_data.csv')
+
+#plt.plot(df['PC_1'], df['PC_2'])
+#plt.show()
