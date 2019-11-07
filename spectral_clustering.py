@@ -1,3 +1,4 @@
+#! /usr/bin/env python3
 # spectral clustering
 
 from sklearn import preprocessing
