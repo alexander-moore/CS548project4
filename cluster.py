@@ -135,9 +135,11 @@ def method_evaluation(data, target = 'sex', optimization_metric = 'Silhuoette'):
         dbscan_k_score.append(evaluate(true_labs, dbscan_pred_labs, data, compute_centroids(full_data, agglom_clus_labels), k)[0])
         spectral_k_score.append(evaluate(true_labs, spectral_pred_labs, data, compute_centroids(full_data, agglom_clus_labels), k)[0])
 
+        method_names = ['SSE', 'Adj Rand', 'Norm Mut Info', 'Adj Mut Info', 'Homog', 'Completeness', 'V-Measure']
 
 
-    return kmeans_k_score, agglom_k_score, dbscan_k_score, spectral_k_score # just return ENTIRE MATRICES ( 4 PD DATA FRAMES OF N_K x N_METRICS)
+
+    return pd.DataFrame(kmeans_k_score, columns = method_names), pd.DataFrame(agglom_k_score, columns = method_names), pd.DataFrame(dbscan_k_score, columns = method_names), pd.DataFrame(spectral_k_score, columns = method_names) # just return ENTIRE MATRICES ( 4 PD DATA FRAMES OF N_K x N_METRICS)
 
 if __name__ == '__main__':
 
@@ -149,10 +151,15 @@ if __name__ == '__main__':
     data = mms.fit_transform(data)
 
     # Use Method_Evaluation to find optimal K (currently according to SILHUOETTE, but could be any metric)
-    kmeans_k, agglom_k, dbscan_n, spectral_k = method_evaluation(data, 'sex') # could make argument for which Metric u want optimal K for
+    kmeans_scores, agglom_scores, dbscan_scores, spectral_scores = method_evaluation(data, 'sex') # could make argument for which Metric u want optimal K for
 
     # Optimized K-means
-    kmeans = KMeans(n_clusters = kmeans_k).fit(data)
+    # can find best score here by looking at matrix
+    plt.plot(x = kmeans_scores['k'], y = kmeans_scores['silhuoette'])
+    plt.show()
+
+    kmeans = KMeans(n_clusters = np.argmin(kmeans_scores['silhuoette'])).fit(data)
+
     visualization(data, kmeans.labels_)
     
     # Optimized Agglomerative Clustering
