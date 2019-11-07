@@ -52,7 +52,7 @@ def evaluate(true_labs, pred_labs, data, centroids, k): # evaluate WRT sex
 	return [k, SSE, adj_rand, norm_info, adj_info, homog, complete, v_measure, silhuoette, clus_cor], cont_mat
 
 
-def visualization(data, classes):
+def visualization(data, cluster_labels):
 
     ## Full-Dimension Visualizations
     # similarity heatmap
@@ -192,6 +192,7 @@ if __name__ == '__main__':
     plt.show()
 
     kmeans = KMeans(n_clusters = np.argmin(kmeans_scores['silhuoette'])).fit(data)
+
 
     visualization(data, kmeans.labels_)
     
