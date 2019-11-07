@@ -28,8 +28,9 @@ def compute_centroids(data, classes):
 
     return centroid_list
 
-def evaluate(true_labs, pred_labs, data, k): # evaluate WRT sex
+def evaluate(true_labs, pred_labs, data, centroids, k): # evaluate WRT sex
 
+    SSE = need_SSE_func(centers, pred_labs) # centers are given by the methods
 	ajd_rand = skm.adjusted_rand_score(true_labs, pred_labs)
 	norm_info = skm.normalized_mutual_info_score(true_labs, pred_labs)
 	adj_info = skm.adjusted_mutual_info_score(true_labs, pred_labs)
@@ -48,7 +49,7 @@ def evaluate(true_labs, pred_labs, data, k): # evaluate WRT sex
     # correlation of elements of prox_mat and match_mat, ideally close to -1:
     clus_cor = np.corr(prox_mat, match_mat)
 
-	return [k, adj_rand, norm_info, adj_info, homog, complete, v_measure, silhuoette, clus_cor], cont_mat
+	return [k, SSE, adj_rand, norm_info, adj_info, homog, complete, v_measure, silhuoette, clus_cor], cont_mat
 
 
 def visualization(data, classes):
@@ -128,10 +129,11 @@ def method_evaluation(data, target = 'sex', optimization_metric = 'Silhuoette'):
         spectral_pred_labs = clusters_to_labels_voting(full_data, spectral_clus_labels)
 
         # evaluate returns a tuple: a list of scores and a matrix. ignoring matrix
-        kmeans_k_score.append(evaluate(true_labs, kmeans_pred_labs, data, k)[0]) # only taking the list of scores because im not gonna mess w matrix
-        agglom_k_score.append(evaluate(true_labs, agglom_pred_labs, data, k)[0])
-        dbscan_k_score.append(evaluate(true_labs, dbscan_pred_labs, data, k)[0])
-        spectral_k_score.append(evaluate(true_labs, spectral_pred_labs, data, k)[0])
+        # only kmeans gives us the cluster centers, for others we will have to calculate them
+        kmeans_k_score.append(evaluate(true_labs, kmeans_pred_labs, data, kmeans.cluster_centers_, k)[0]) # [0] because only taking the list of scores because im not gonna mess w matrix
+        agglom_k_score.append(evaluate(true_labs, agglom_pred_labs, data, compute_centroids(full_data, agglom_clus_labels), k)[0])
+        dbscan_k_score.append(evaluate(true_labs, dbscan_pred_labs, data, compute_centroids(full_data, agglom_clus_labels), k)[0])
+        spectral_k_score.append(evaluate(true_labs, spectral_pred_labs, data, compute_centroids(full_data, agglom_clus_labels), k)[0])
 
     print('K-Means Clustering Scores per K: ')
     print(kmeans_k_score) # print the table of scores
