@@ -74,15 +74,48 @@ def visualization(data, classes):
 # this will turn arbitrary cluster labelling [clus1, clus2, ..] into the same type as our target (1 male 0 female) by getting the mode target of each cluster
 def clusters_to_labels_voting(data = full_data, labels, target = 'sex'):
 
-    method_pred_labs = []
+    method_pred_labs = np.zeros(len(labels))
 
+    target_index = data.get_loc(target)
     for clus in set(labels): # for each cluster
+        cluster = []
+        index_list = []
+        for i in range(0, len(labels)):
+            if lables[i] == clus:
+                index_list.append(i)
+                cluster.append(target[j])
+        predicted_target = max(set(cluster), key = cluster.count)
+        for index in index_list:
+            method_pred_labs[index] = predicted_target
 
-        subset = data[target] == clus # just get the data in that cluster
-        true_label_mode = subset.mode[target] # get the mode target in that cluster
-        subset_pred_vec = [true_label_mode] * subset.shape[0] # each element of subset gets the same modal label
-        method_pred_labs.extend(subset_pred_vec) # use extend to concatenate this ckuster's output
 
+#    cluster_results = AgglomerativeClustering(n_clusters=k).fit_predict(data)
+#    pred_target = np.zeros(target.shape)
+#    for i in range(0, k):
+#        cluster = []
+#        index_list = []
+#        for j in range(0, len(cluster_results)):
+#            if cluster_results[j] == i:
+#                cluster.append(target[j])
+#                index_list.append(j)
+#        #print('Cluster {} Results:'.format(max(set(cluster), key = cluster.count)))
+#        print('Cluster Results:')
+#        predicted_reg = max(set(cluster), key = cluster.count)
+#        print('  Predicted Representative: {}'.format(predicted_reg))
+#        print('  Actual Classes:')
+#        for num in range(0, k):
+#            print('    {}\'s: {}'.format(num, cluster.count(num)))
+#        print('  Cluster Rep. Indexes: {}'.format(index_list))
+#        for index in index_list:
+#            pred_target[index] = predicted_reg
+
+
+
+#        subset = data[target] == clus # just get the data in that cluster
+#        true_label_mode = subset.mode[target] # get the mode target in that cluster
+#        subset_pred_vec = [true_label_mode] * subset.shape[0] # each element of subset gets the same modal label
+#        method_pred_labs.extend(subset_pred_vec) # use extend to concatenate this ckuster's output
+#
     return method_pred_labs
 
 
