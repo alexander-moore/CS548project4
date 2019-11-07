@@ -28,7 +28,7 @@ def compute_centroids(data, classes):
 
     return centroid_list
 
-def evaluate(true_labs, pred_labs, data, centroids, k): # evaluate WRT sex
+def evaluate(true_labs, cluster_labs, pred_labs, data, centroids, k): # evaluate WRT sex
 
     SSE = need_SSE_func(centers, pred_labs) # centers are given by the methods
 	ajd_rand = skm.adjusted_rand_score(true_labs, pred_labs)
@@ -45,11 +45,17 @@ def evaluate(true_labs, pred_labs, data, centroids, k): # evaluate WRT sex
     # pairwise row-distances matrix (entry i,j is the distance from point i to point j of data)
     prox_mat = pd.DataFrame(distance_matrix(data.values, data.values), index = data.index, columns = data.index)
     # match matrix: entry i,j is 1 if observation i and j share a cluster, 1 otherwise
-    match_mat = MATCH???(data)
+    match_mat = pd.DataFrame(index = data.index, columns = data.index)
+    for i in range(0, len(data.index)):
+        for j in range(0, len(data.index)):
+            if cluster_labs[i] == cluster_labs[j]:
+                match_mat.iloc[i, j] = 1
+            else:
+                match_mat.iloc[i, j] = 0
     # correlation of elements of prox_mat and match_mat, ideally close to -1:
     clus_cor = np.corr(prox_mat, match_mat)
 
-	return [k, SSE, adj_rand, norm_info, adj_info, homog, complete, v_measure, silhuoette, clus_cor], cont_mat
+    return [k, SSE, adj_rand, norm_info, adj_info, homog, complete, v_measure, silhuoette, clus_cor], cont_mat
 
 
 def visualization(data, cluster_labels):
