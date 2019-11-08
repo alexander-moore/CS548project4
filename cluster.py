@@ -4,6 +4,7 @@ import os, sys
 import sklearn.metrics as skm
 
 from sklearn import preprocessing
+from sklearn.model_selection import train_test_split
 from sklearn.datasets import load_digits
 from sklearn.cluster import KMeans
 from sklearn.cluster import AgglomerativeClustering
@@ -11,6 +12,8 @@ from sklearn.cluster import AffinityPropagation
 from sklearn.cluster import SpectralClustering
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import fowlkes_mallows_score
+from sklearn.metrics import pairwise_distances
+#from sklearn.metrics import matthews_corrcoef
 from sklearn.decomposition import PCA
 
 import matplotlib.pyplot as plt
@@ -29,33 +32,33 @@ def compute_centroids(data, classes):
 
     return centroid_list
 
-    # Evaluate internal/relative indicies of a clustering given inputs
+# Evaluate internal/relative indicies of a clustering given inputs
 def evaluate_internal(true_labs, cluster_labs, pred_labs, data, centroids):
-
     #SSE = need_SSE_func(centroids, pred_labs) # centers are given by the methods
-    ajd_rand = skm.adjusted_rand_score(true_labs, pred_labs)
+    adj_rand = skm.adjusted_rand_score(true_labs, pred_labs)
     norm_info = skm.normalized_mutual_info_score(true_labs, pred_labs)
     adj_info = skm.adjusted_mutual_info_score(true_labs, pred_labs)
-    silhuoette = skm.silhuoette_score(data, cluster_labs) # need to verify arguments on this
+    pairwise_dist = skm.pairwise_distances(data.values)
+    silhuoette = skm.silhouette_score(pairwise_dist, cluster_labs) # need to verify arguments on this
     
     # Correlation Cluster Validity
-    # pairwise row-distances matrix (entry i,j is the distance from point i to point j of data)
-    prox_mat = pd.DataFrame(distance_matrix(data.values, data.values), index = data.index, columns = data.index)
-    # match matrix: entry i,j is 1 if observation i and j share a cluster, 1 otherwise
-    match_mat = pd.DataFrame(index = data.index, columns = data.index)
+    match_matrix = np.zeros((len(data.index), len(data.index)))
     for i in range(0, len(data.index)):
+        row_lab = cluster_labs[i]
         for j in range(0, len(data.index)):
-            if cluster_labs[i] == cluster_labs[j]:
-                match_mat.iloc[i, j] = 1
+            if row_lab == cluster_labs[j]:
+                match_matrix[i, j] = 1
             else:
-                match_mat.iloc[i, j] = 0
+                match_matrix[i, j] = 0
+
     # correlation of elements of prox_mat and match_mat, ideally close to -1:
-    clus_cor = np.corr(prox_mat, match_mat)
+    clus_cor = np.corrcoef(pairwise_dist.flatten(), match_matrix.flatten())
+    clus_cor_matrix = np.corrcoef(pairwise_dist, match_matrix)
+    #return [SSE, adj_rand, norm_info, adj_info, silhuoette], clus_cor
+    # NOTE: returning the correlation between 2 LOOONG arrays, also returning the corr matrix between the two matrices???? Let if for now I guess
+    return [adj_rand, norm_info, adj_info, silhuoette, clus_cor[0,1]], clus_cor_matrix
 
-    #return [k, SSE, adj_rand, norm_info, adj_info, homog, complete, v_measure, silhuoette, clus_cor], cont_mat
-    return [adj_rand, norm_info, adj_info, silhuoette]
-
-    # Evaluate external indicies of a clustering given true and predicted labels
+# Evaluate external indicies of a clustering given true and predicted labels
 def evaluate_external(true_labs, pred_labs):
     homog = skm.homogeneity_score(true_labs, pred_labs)
     complete = skm.completeness_score(true_labs, pred_labs)
@@ -63,72 +66,44 @@ def evaluate_external(true_labs, pred_labs):
     cont_mat = skm.cluster.contingency_matrix(true_labs, pred_labs)
     return [homog, complete, v_measure], cont_mat
 
-def visualization(data, cluster_labels):
+def visualization(data, corr_mat, cluster_labels):
 
     ## Full-Dimension Visualizations
     # similarity heatmap
     #data = sort_data(by = classes) ??
 
-    sim_mat = similarity_matrix(data)
-    jeat = sns.heatmap(sim_mat)
+    #sim_mat = similarity_matrix(data)
+    heat = sns.heatmap(corr_mat)
     heat.show()
 
     ## Reduced Dimension Visualizations
-    # Convert Data to PC2
+    pca = skm.PCA(n_components=2)
+    pca_data = pca.fit(data)
     pca_df = pd.DataFrame(pca_data, columns = ['PC_1', 'PC_2'])
 
-    ## Visualize
-    plt.plot(x = PC1, y = PC2, color = classes, legend = classes)
+    # Visualize
+    plt.plot(x = pca_df['PC_1'], y = pca_df['PC_2'], color = classes, legend = classes)
     plt.show()
 
 
-    # Turns arbitrary cluster labelling [clus1, clus2, ..] into the same type as our target (ex. 1 male 0 female) by getting the mode target of each cluster
-def clusters_to_labels_voting(full_data, labels, target_labels, target):
+# Turns arbitrary cluster labelling [clus1, clus2, ..] into the same type as our target (ex. 1 male 0 female) by getting the mode target of each cluster
+def clusters_to_labels_voting(data, clus_labels, target_labels, target):
 
-    method_pred_labs = np.zeros(len(labels))
-    target_index = full_data.columns.get_loc(target)
+    method_pred_labs = np.zeros(len(clus_labels))
+    target_index = data.columns.get_loc(target)
 
-    for clus in set(labels): # for each cluster
+    for clus in set(clus_labels): # for each cluster
         cluster = []
         index_list = []
-        for i in range(0, len(labels)):
-            if labels[i] == clus:
+        for i in range(0, len(clus_labels)):
+            if clus_labels[i] == clus:
                 index_list.append(i)
-                cluster.append(target_labels[j])
+                cluster.append(target_labels.iloc[i])
         predicted_target = max(set(cluster), key = cluster.count)
         for index in index_list:
             method_pred_labs[index] = predicted_target
 
-
-#    cluster_results = AgglomerativeClustering(n_clusters=k).fit_predict(data)
-#    pred_target = np.zeros(target.shape)
-#    for i in range(0, k):
-#        cluster = []
-#        index_list = []
-#        for j in range(0, len(cluster_results)):
-#            if cluster_results[j] == i:
-#                cluster.append(target[j])
-#                index_list.append(j)
-#        #print('Cluster {} Results:'.format(max(set(cluster), key = cluster.count)))
-#        print('Cluster Results:')
-#        predicted_reg = max(set(cluster), key = cluster.count)
-#        print('  Predicted Representative: {}'.format(predicted_reg))
-#        print('  Actual Classes:')
-#        for num in range(0, k):
-#            print('    {}\'s: {}'.format(num, cluster.count(num)))
-#        print('  Cluster Rep. Indexes: {}'.format(index_list))
-#        for index in index_list:
-#            pred_target[index] = predicted_reg
-
-
-
-#        subset = data[target] == clus # just get the data in that cluster
-#        true_label_mode = subset.mode[target] # get the mode target in that cluster
-#        subset_pred_vec = [true_label_mode] * subset.shape[0] # each element of subset gets the same modal label
-#        method_pred_labs.extend(subset_pred_vec) # use extend to concatenate this ckuster's output
-#
     return method_pred_labs
-
 
 # method_evaluation should create, display, and select best scoring K across methods
 def method_evaluation(data, target = 'sex', optimization_metric = 'Silhuoette'):
@@ -186,21 +161,28 @@ def method_evaluation(data, target = 'sex', optimization_metric = 'Silhuoette'):
     return pd.DataFrame(kmeans_k_score, columns = method_names), pd.DataFrame(agglom_k_score, columns = method_names), pd.DataFrame(dbscan_k_score, columns = method_names), pd.DataFrame(spectral_k_score, columns = method_names) # just return ENTIRE MATRICES ( 4 PD DATA FRAMES OF N_K x N_METRICS)
 
 if __name__ == '__main__':
+    # Delcare target
+    target = 'sex'
 
     # Load the data here
     mms = preprocessing.MinMaxScaler()
     full_data = pd.read_csv('data/clean_census_income.csv')
+
+    # Stratify sampling to reduce data size. Cannot compute a distance matrix on all ~200000 instances
+    # 'wt' = With Target
+    # 'wot' = Without Target
+    data_train, data_test = train_test_split(full_data, test_size=0.95, stratify=full_data.loc[:, target])
     full_data_names = full_data.columns
-    scaled_full_data = mms.fit_transform(full_data)
-    scaled_full_data = pd.DataFrame(scaled_full_data, columns=full_data_names)
+    scaled_data_train_wt = mms.fit_transform(data_train)
+    scaled_data_test_wt = mms.fit_transform(data_test)
+    scaled_data_train_wt = pd.DataFrame(scaled_data_train_wt, columns=full_data_names)
 
     # Separate out the data for various experiments here
-    target = 'sex'
-    target_data = full_data.loc[:, target]
-    data = full_data.drop(columns=target)
-    data_names = data.columns
-    data = mms.fit_transform(data)
-    data = pd.DataFrame(data, columns=data_names)
+    target_data = data_train.loc[:, target]
+    data_train_wot = data_train.drop(columns=target)
+    data_names = data_train_wot.columns
+    scaled_data_train_wot = mms.fit_transform(data_train_wot)
+    scaled_data_train_wot = pd.DataFrame(scaled_data_train_wot, columns=data_names)
 
     # Use Method_Evaluation to find optimal K (currently according to SILHUOETTE, but could be any metric)
     #kmeans_scores, agglom_scores, dbscan_scores, spectral_scores = method_evaluation(data, 'sex') # could make argument for which Metric u want optimal K for
@@ -211,17 +193,28 @@ if __name__ == '__main__':
     #    plt.show()
 
     # Run the experiments
-    #kmeans = KMeans(n_clusters = np.argmin(kmeans_scores['silhuoette'])).fit(data)
     k = 10
-    kmeans = KMeans(n_clusters = k).fit(data)
-    pred_labs = clusters_to_labels_voting(full_data, kmeans.labels_, target_data)
+
+    # With target experiments
     centroids = []
-    internal_scores_list = evaluate_internal(target_data, kmeans.labels_, pred_labs, data, centroids)
-    external_scores_list, cont_mat = evaluate_external(target_data, pred_labs)
+    kmeans_wt = KMeans(n_clusters = k).fit(scaled_data_train_wt)
+    pred_labs_wt = clusters_to_labels_voting(scaled_data_train_wt, kmeans_wt.labels_, target_data, target)
+    internal_scores_list, cluster_corr = evaluate_internal(target_data, kmeans_wt.labels_, pred_labs_wt, scaled_data_train_wt, centroids)
+
+    # Without target experiments
+    kmeans_wot = KMeans(n_clusters = k).fit(scaled_data_train_wot)
+    pred_labs_wot = clusters_to_labels_voting(scaled_data_train_wt, kmeans_wot.labels_, target_data, target)
+    external_scores_list, cont_mat = evaluate_external(target_data, pred_labs_wot)
     print(internal_scores_list)
+    print(cluster_corr)
+    # NOTE: DO NOT RUN VIS, I think the heatmap is too big and crashes computers
+    #visualization(scaled_data_train_wt, cluster_corr, target)
     print(external_scores_list)
     print(cont_mat)
+    #visualization(scaled_data_train_wot, cont_mat, target)
     sys.exit()
+
+    # LOL ALL THIS BELOW DOES NOT WORK
 
     visualization(data, kmeans.labels_)
     
