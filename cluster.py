@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 # cluster.py
+import os, sys
 import sklearn.metrics as skm
 
 from sklearn import preprocessing
@@ -28,17 +29,13 @@ def compute_centroids(data, classes):
 
     return centroid_list
 
-def evaluate(true_labs, cluster_labs, pred_labs, data, centroids, k): # evaluate WRT sex
+    # Evaluate internal/relative indicies of a clustering given inputs
+def evaluate_internal(true_labs, cluster_labs, pred_labs, data, centroids):
 
-    SSE = need_SSE_func(centers, pred_labs) # centers are given by the methods
-	ajd_rand = skm.adjusted_rand_score(true_labs, pred_labs)
-	norm_info = skm.normalized_mutual_info_score(true_labs, pred_labs)
-	adj_info = skm.adjusted_mutual_info_score(true_labs, pred_labs)
-	homog = skm.homogeneity_score(true_labs, pred_labs)
-	complete = skm.completeness_score(true_labs, pred_labs)
-	v_measure = skm.v_measure_score(true_labs, pred_labs)
-	cont_mat = skm.cluster.contingency_matrix(true_labs, pred_labs)
-
+    #SSE = need_SSE_func(centroids, pred_labs) # centers are given by the methods
+    ajd_rand = skm.adjusted_rand_score(true_labs, pred_labs)
+    norm_info = skm.normalized_mutual_info_score(true_labs, pred_labs)
+    adj_info = skm.adjusted_mutual_info_score(true_labs, pred_labs)
     silhuoette = skm.silhuoette_score(data, cluster_labs) # need to verify arguments on this
     
     # Correlation Cluster Validity
@@ -55,14 +52,22 @@ def evaluate(true_labs, cluster_labs, pred_labs, data, centroids, k): # evaluate
     # correlation of elements of prox_mat and match_mat, ideally close to -1:
     clus_cor = np.corr(prox_mat, match_mat)
 
-    return [k, SSE, adj_rand, norm_info, adj_info, homog, complete, v_measure, silhuoette, clus_cor], cont_mat
+    #return [k, SSE, adj_rand, norm_info, adj_info, homog, complete, v_measure, silhuoette, clus_cor], cont_mat
+    return [adj_rand, norm_info, adj_info, silhuoette]
 
+    # Evaluate external indicies of a clustering given true and predicted labels
+def evaluate_external(true_labs, pred_labs):
+    homog = skm.homogeneity_score(true_labs, pred_labs)
+    complete = skm.completeness_score(true_labs, pred_labs)
+    v_measure = skm.v_measure_score(true_labs, pred_labs)
+    cont_mat = skm.cluster.contingency_matrix(true_labs, pred_labs)
+    return [homog, complete, v_measure], cont_mat
 
 def visualization(data, cluster_labels):
 
     ## Full-Dimension Visualizations
     # similarity heatmap
-    data = sort_data(by = classes) ??
+    #data = sort_data(by = classes) ??
 
     sim_mat = similarity_matrix(data)
     jeat = sns.heatmap(sim_mat)
@@ -77,19 +82,19 @@ def visualization(data, cluster_labels):
     plt.show()
 
 
-# this will turn arbitrary cluster labelling [clus1, clus2, ..] into the same type as our target (1 male 0 female) by getting the mode target of each cluster
-def clusters_to_labels_voting(data = full_data, labels, target = 'sex'):
+    # Turns arbitrary cluster labelling [clus1, clus2, ..] into the same type as our target (ex. 1 male 0 female) by getting the mode target of each cluster
+def clusters_to_labels_voting(full_data, labels, target_labels, target):
 
     method_pred_labs = np.zeros(len(labels))
+    target_index = full_data.columns.get_loc(target)
 
-    target_index = data.get_loc(target)
     for clus in set(labels): # for each cluster
         cluster = []
         index_list = []
         for i in range(0, len(labels)):
-            if lables[i] == clus:
+            if labels[i] == clus:
                 index_list.append(i)
-                cluster.append(target[j])
+                cluster.append(target_labels[j])
         predicted_target = max(set(cluster), key = cluster.count)
         for index in index_list:
             method_pred_labs[index] = predicted_target
@@ -169,12 +174,12 @@ def method_evaluation(data, target = 'sex', optimization_metric = 'Silhuoette'):
 
         # evaluate returns a tuple: a list of scores and a matrix. ignoring matrix
         # only kmeans gives us the cluster centers, for others we will have to calculate them
-        kmeans_k_score.append(evaluate(true_labs, kmeans_pred_labs, data, kmeans.cluster_centers_, k)[0]) # [0] because only taking the list of scores because im not gonna mess w matrix
-        agglom_k_score.append(evaluate(true_labs, agglom_pred_labs, data, compute_centroids(full_data, agglom_clus_labels), k)[0])
-        dbscan_k_score.append(evaluate(true_labs, dbscan_pred_labs, data, compute_centroids(full_data, agglom_clus_labels), k)[0])
-        spectral_k_score.append(evaluate(true_labs, spectral_pred_labs, data, compute_centroids(full_data, agglom_clus_labels), k)[0])
+    kmeans_k_score.append(evaluate(true_labs, kmeans_pred_labs, data, kmeans.cluster_centers_, k)[0]) # [0] because only taking the list of scores because im not gonna mess w matrix
+    agglom_k_score.append(evaluate(true_labs, agglom_pred_labs, data, compute_centroids(full_data, agglom_clus_labels), k)[0])
+    dbscan_k_score.append(evaluate(true_labs, dbscan_pred_labs, data, compute_centroids(full_data, agglom_clus_labels), k)[0])
+    spectral_k_score.append(evaluate(true_labs, spectral_pred_labs, data, compute_centroids(full_data, agglom_clus_labels), k)[0])
 
-        method_names = ['SSE', 'Adj Rand', 'Norm Mut Info', 'Adj Mut Info', 'Homog', 'Completeness', 'V-Measure']
+    method_names = ['SSE', 'Adj Rand', 'Norm Mut Info', 'Adj Mut Info', 'Homog', 'Completeness', 'V-Measure']
 
 
 
@@ -182,23 +187,41 @@ def method_evaluation(data, target = 'sex', optimization_metric = 'Silhuoette'):
 
 if __name__ == '__main__':
 
-    main(k)
+    # Load the data here
+    mms = preprocessing.MinMaxScaler()
+    full_data = pd.read_csv('data/clean_census_income.csv')
+    full_data_names = full_data.columns
+    scaled_full_data = mms.fit_transform(full_data)
+    scaled_full_data = pd.DataFrame(scaled_full_data, columns=full_data_names)
 
-    # lets just load and scale the data here
-    data = pd.read_csv('data/clean_census_income.csv')
-    mms = sklearn.preprocessing.MinMaxScaler()
+    # Separate out the data for various experiments here
+    target = 'sex'
+    target_data = full_data.loc[:, target]
+    data = full_data.drop(columns=target)
+    data_names = data.columns
     data = mms.fit_transform(data)
+    data = pd.DataFrame(data, columns=data_names)
 
     # Use Method_Evaluation to find optimal K (currently according to SILHUOETTE, but could be any metric)
-    kmeans_scores, agglom_scores, dbscan_scores, spectral_scores = method_evaluation(data, 'sex') # could make argument for which Metric u want optimal K for
+    #kmeans_scores, agglom_scores, dbscan_scores, spectral_scores = method_evaluation(data, 'sex') # could make argument for which Metric u want optimal K for
 
     # Optimized K-means
     # can find best score here by looking at matrix
-    plt.plot(x = kmeans_scores['k'], y = kmeans_scores['silhuoette'])
-    plt.show()
+    #    plt.plot(x = kmeans_scores['k'], y = kmeans_scores['silhuoette'])
+    #    plt.show()
 
-    kmeans = KMeans(n_clusters = np.argmin(kmeans_scores['silhuoette'])).fit(data)
-
+    # Run the experiments
+    #kmeans = KMeans(n_clusters = np.argmin(kmeans_scores['silhuoette'])).fit(data)
+    k = 10
+    kmeans = KMeans(n_clusters = k).fit(data)
+    pred_labs = clusters_to_labels_voting(full_data, kmeans.labels_, target_data)
+    centroids = []
+    internal_scores_list = evaluate_internal(target_data, kmeans.labels_, pred_labs, data, centroids)
+    external_scores_list, cont_mat = evaluate_external(target_data, pred_labs)
+    print(internal_scores_list)
+    print(external_scores_list)
+    print(cont_mat)
+    sys.exit()
 
     visualization(data, kmeans.labels_)
     
@@ -213,65 +236,6 @@ if __name__ == '__main__':
     # ADV TOPIC: Optimized Spectral Clustering
     spectral = SpectralClustering(n_clusters = spectral_k)
     visualization(data, spectral.labels_)
-
-
-
-
-
-#def main(k):
-#    data, target = load_digits(return_X_y=True)
-#    class_names = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
-#
-#    # K-means clustering
-#    kmeans = KMeans(n_clusters=k).fit(data)
-#    pred_target = np.zeros(target.shape)
-#    for i in range(0, k):
-#        cluster = []
-#        index_list = []
-#        for j in range(0, data.shape[0]):
-#            if kmeans.predict([data[j]]) == i:
-#                cluster.append(target[j])
-#                index_list.append(j)
-#        #print('Cluster {} Results:'.format(max(set(cluster), key = cluster.count)))
-#        print('Cluster Results:')
-#        predicted_reg = max(set(cluster), key = cluster.count)
-#        print('  Predicted Representative: {}'.format(predicted_reg))
-#        print('  Actual Classes:')
-#        for num in range(0, k):
-#            print('    {}\'s: {}'.format(num, cluster.count(num)))
-#        print('  Cluster Rep. Indexes: {}'.format(index_list))
-#        for index in index_list:
-#            pred_target[index] = predicted_reg
-#    print('  Fowlkes-Mallows score: {}'.format(fowlkes_mallows_score(target, pred_target)))
-#    plot_confusion_matrix(target, pred_target, class_names, title='K-means Confusion Matrix')
-#    plt.show()
-
-    # Agglomerative clustering
-#    cluster_results = AgglomerativeClustering(n_clusters=k).fit_predict(data)
-#    pred_target = np.zeros(target.shape)
-#    for i in range(0, k):
-#        cluster = []
-#        index_list = []
-#        for j in range(0, len(cluster_results)):
-#            if cluster_results[j] == i:
-#                cluster.append(target[j])
-#                index_list.append(j)
-#        #print('Cluster {} Results:'.format(max(set(cluster), key = cluster.count)))
-#        print('Cluster Results:')
-#        predicted_reg = max(set(cluster), key = cluster.count)
-#        print('  Predicted Representative: {}'.format(predicted_reg))
-#        print('  Actual Classes:')
-#        for num in range(0, k):
-#            print('    {}\'s: {}'.format(num, cluster.count(num)))
-#        print('  Cluster Rep. Indexes: {}'.format(index_list))
-#        for index in index_list:
-#            pred_target[index] = predicted_reg
-#    print('  Fowlkes-Mallows score: {}'.format(fowlkes_mallows_score(target, pred_target)))
-#    plot_confusion_matrix(target, pred_target, class_names, title='Agglomerative Confusion Matrix')
-#    plt.show()
-
-
-
 
     print('K-Means Clustering Scores per K: ')
     print(kmeans_k_score) # print the table of scores
@@ -307,21 +271,22 @@ if __name__ == '__main__':
 
     print('==============================================')
 
-    kmeans_best_k = np.argmin(kmeans_k_score[].silhuoette_scores) # "Which K got the lowest silhuoette score for this method?" <- silhguoete could be argument
-    agglom_best_k = np.argmin(agglom_k_score[].silhuoette_scores)
-    dbscan_best_k = np.argmin(dbscan_k_score[].silhuoette_scores)
-    spectral_best_k = np.argmin(spectral_k_score[].silhuoette_scores)
-
-
-    print('Optimal K selected per method selected by Silhuoette: ')
-    print()
-    print('Kmeans Clustering selects K = ', kmeans_best_k)
-
-    print('Agglom Clustering selects K = ', agglom_best_k)
-
-    print('DBSCAN Clustering selects K = ', dbscan_best_k)
-
-    print('Spectral Clusters selects K = ', spectral_best_k)
+    #NOTE: This needs to be fixed. Busted and commented out for now
+#    kmeans_best_k = np.argmin(kmeans_k_score[].silhuoette_scores) # "Which K got the lowest silhuoette score for this method?" <- silhguoete could be argument
+#    agglom_best_k = np.argmin(agglom_k_score[].silhuoette_scores)
+#    dbscan_best_k = np.argmin(dbscan_k_score[].silhuoette_scores)
+#    spectral_best_k = np.argmin(spectral_k_score[].silhuoette_scores)
+#
+#
+#    print('Optimal K selected per method selected by Silhuoette: ')
+#    print()
+#    print('Kmeans Clustering selects K = ', kmeans_best_k)
+#
+#    print('Agglom Clustering selects K = ', agglom_best_k)
+#
+#    print('DBSCAN Clustering selects K = ', dbscan_best_k)
+#
+#    print('Spectral Clusters selects K = ', spectral_best_k)
 
 
 def plot_confusion_matrix(y_true, y_pred, classes,
@@ -388,3 +353,4 @@ def plot_confusion_matrix(y_true, y_pred, classes,
                     color="white" if cm[i, j] > thresh else "black")
     fig.tight_layout()
     return ax
+
