@@ -117,7 +117,7 @@ def method_evaluation(data, target = 'sex', optimization_metric = 'Silhuoette'):
 
     data = data.drop(columns=target)
 
-    for k in range(1, 101):
+    for k in range(1, 15):
 
         # Kmeans
         kmeans = KMeans(n_clusters = k).fit(data) #random state = 0 ?
@@ -155,8 +155,6 @@ def method_evaluation(data, target = 'sex', optimization_metric = 'Silhuoette'):
     spectral_k_score.append(evaluate(true_labs, spectral_pred_labs, data, compute_centroids(full_data, agglom_clus_labels), k)[0])
 
     method_names = ['SSE', 'Adj Rand', 'Norm Mut Info', 'Adj Mut Info', 'Homog', 'Completeness', 'V-Measure']
-
-
 
     return pd.DataFrame(kmeans_k_score, columns = method_names), pd.DataFrame(agglom_k_score, columns = method_names), pd.DataFrame(dbscan_k_score, columns = method_names), pd.DataFrame(spectral_k_score, columns = method_names) # just return ENTIRE MATRICES ( 4 PD DATA FRAMES OF N_K x N_METRICS)
 
@@ -213,6 +211,12 @@ if __name__ == '__main__':
     print(cont_mat)
     #visualization(scaled_data_train_wot, cont_mat, target)
     sys.exit()
+
+
+
+
+
+
 
     # LOL ALL THIS BELOW DOES NOT WORK
 
