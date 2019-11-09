@@ -10,6 +10,7 @@ from sklearn.cluster import KMeans
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.cluster import AffinityPropagation
 from sklearn.cluster import SpectralClustering
+from sklearn.cluster import DBSCAN
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import fowlkes_mallows_score
 from sklearn.metrics import pairwise_distances
@@ -121,42 +122,58 @@ def method_evaluation(data, target = 'sex', optimization_metric = 'Silhuoette'):
 
         # Kmeans
         kmeans = KMeans(n_clusters = k).fit(data) #random state = 0 ?
-        print(kmeans.labels_)
+        #print(kmeans.labels_)
         kmeans_clus_labels = kmeans.labels_
-        print(kmeans.predict(data))
-        print(kmeans.cluster_centers_)
+        #print(kmeans.predict(data))
+        #print(kmeans.cluster_centers_)
 
         # Agglom
-        agglom = AgglomerativeClustering(n_clusters = k).fit(data)
-        print(agglom.labels_)
-        agglom_clus_labels = agglom.labels_
+        #agglom = AgglomerativeClustering(n_clusters = k).fit(data)
+        #print(agglom.labels_)
+        #agglom_clus_labels = agglom.labels_
 
         # DBSCAN
         # eps is the ball radius around points. remember our space is in high dimension, but scaled to 0,1. so this is fucked
-        core_samples, labels = DBSCAN(data, eps = .05, min_samples = k) #takes eps and min_samples (within eps), returns indicies of core samples and labels
-        print(core_samples, labels) #core_samples: indices of core samples, array[n_core_samples], labels: cluster labs for each pt, array[n_samples]
+        core_samples, labels = DBSCAN(eps = .05, min_samples = k).fit(data) #takes eps and min_samples (within eps), returns indicies of core samples and labels
+        #print(core_samples, labels) #core_samples: indices of core samples, array[n_core_samples], labels: cluster labs for each pt, array[n_samples]
         dbscan_clus_labels = labels
 
         # Spectral Clustering
         spectral = SpectralClustering(n_clusters = k)
-        print(spectral.labels_)
+        #print(spectral.labels_)
         spectral_clus_labels = spectral.labels_
 
         kmeans_pred_labs = clusters_to_labels_voting(full_data, kmeans_clus_labels)
-        agglom_pred_labs = clusters_to_labels_voting(full_data, agglom_clus_labels)
+        #agglom_pred_labs = clusters_to_labels_voting(full_data, agglom_clus_labels)
         dbscan_pred_labs = clusters_to_labels_voting(full_data, dbscan_clus_labels)
         spectral_pred_labs = clusters_to_labels_voting(full_data, spectral_clus_labels)
 
         # evaluate returns a tuple: a list of scores and a matrix. ignoring matrix
         # only kmeans gives us the cluster centers, for others we will have to calculate them
     kmeans_k_score.append(evaluate(true_labs, kmeans_pred_labs, data, kmeans.cluster_centers_, k)[0]) # [0] because only taking the list of scores because im not gonna mess w matrix
-    agglom_k_score.append(evaluate(true_labs, agglom_pred_labs, data, compute_centroids(full_data, agglom_clus_labels), k)[0])
+    #agglom_k_score.append(evaluate(true_labs, agglom_pred_labs, data, compute_centroids(full_data, agglom_clus_labels), k)[0])
     dbscan_k_score.append(evaluate(true_labs, dbscan_pred_labs, data, compute_centroids(full_data, agglom_clus_labels), k)[0])
     spectral_k_score.append(evaluate(true_labs, spectral_pred_labs, data, compute_centroids(full_data, agglom_clus_labels), k)[0])
 
+
+    print('K-Means Clustering Scores per K: ')
+    print(kmeans_k_score) # print the table of scores
+
+    print('Agglomerative Clustering Scores per K: ')
+    #print(agglom_k_score)
+
+    print('DBSCAN Clustering Scores per K: ')
+    print(dbscan_k_score)
+ 
+    print('Spectral Clustering Scores per K: ')
+    print(spectral_k_score)
+ 
     method_names = ['SSE', 'Adj Rand', 'Norm Mut Info', 'Adj Mut Info', 'Homog', 'Completeness', 'V-Measure']
 
-    return pd.DataFrame(kmeans_k_score, columns = method_names), pd.DataFrame(agglom_k_score, columns = method_names), pd.DataFrame(dbscan_k_score, columns = method_names), pd.DataFrame(spectral_k_score, columns = method_names) # just return ENTIRE MATRICES ( 4 PD DATA FRAMES OF N_K x N_METRICS)
+
+    #pd.DataFrame(agglom_k_score, columns = method_names), 
+
+    return pd.DataFrame(kmeans_k_score, columns = method_names), pd.DataFrame(dbscan_k_score, columns = method_names), pd.DataFrame(spectral_k_score, columns = method_names) # just return ENTIRE MATRICES ( 4 PD DATA FRAMES OF N_K x N_METRICS)
 
 if __name__ == '__main__':
     # Delcare target
@@ -165,6 +182,10 @@ if __name__ == '__main__':
     # Load the data here
     mms = preprocessing.MinMaxScaler()
     full_data = pd.read_csv('data/clean_census_income.csv')
+
+    # perform
+    km, ag, db, spec = method_evaluation(full_data)
+    print(km, ag, db, spec)
 
     # Stratify sampling to reduce data size. Cannot compute a distance matrix on all ~200000 instances
     # 'wt' = With Target
