@@ -62,16 +62,14 @@ def evaluate_external(true_labs, pred_labs):
     cont_mat = skm.cluster.contingency_matrix(true_labs, pred_labs)
     return [homog, complete, v_measure], cont_mat
     
-def visualization(data, corr_mat, cluster_labels, title):
+def visualization(data, similarity, corr_mat, cluster_labels, title):
     print('hi. welcome to visualization:')
 
     ## Full-Dimension Visualizations
     # similarity heatmap
-    #data = sort_data(by = classes) ??
-
-    #sim_mat = similarity_matrix(data)
-    #heat = sns.heatmap(corr_mat)
-    #heat.show()
+    sim_sorted = similarity.sort_data(by = classes)
+    heat = sns.heatmap(sim_sorted)
+    heat.show()
 
     ## Reduced Dimension Visualizations
     pca = PCA(n_components=2)
@@ -86,16 +84,17 @@ def visualization(data, corr_mat, cluster_labels, title):
     plt.title(title)
     plt.show()
 
-    mds = MDS(n_components = 2, metric = False)
-    mds_data = mds.fit_transform(data)
-    print(mds_data.shape)
-    mds_df = pd.DataFrame(data = mds_data, columns = ['1', '2'])
+    # nonparametric MDS takes a long time, only run if you have to
+    #mds = MDS(n_components = 2, metric = False)
+    #mds_data = mds.fit_transform(data)
+    #print(mds_data.shape)
+    #mds_df = pd.DataFrame(data = mds_data, columns = ['1', '2'])
 
-    plt.scatter(mds_df['1'], mds_df['2'], c = cluster_labels, alpha = .5)
-    plt.xlabel('MDS dim 1')
-    plt.ylabel('MDS dim 2')
-    plt.title(title)
-    plt.show()
+    #plt.scatter(mds_df['1'], mds_df['2'], c = cluster_labels, alpha = .5)
+    #plt.xlabel('MDS dim 1')
+    #plt.ylabel('MDS dim 2')
+    #plt.title(title)
+    #plt.show()
 
 
 
@@ -191,7 +190,7 @@ if __name__ == '__main__':
                                                            prox_mat = prox_mat)
     print(internal_scores_list)
 
-    visualization(data = mms_data, corr_mat = 1, cluster_labels = kmeans_wt.labels_, title = 'Supervised K-Means')
+    visualization(data = mms_data, similarity = prox_mat, corr_mat = 1, cluster_labels = kmeans_wt.labels_, title = 'Supervised K-Means')
 
     # Without target experiments
     print('without target')
