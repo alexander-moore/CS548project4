@@ -170,20 +170,29 @@ if __name__ == '__main__':
 
     # Write directly to experiments:
     # n clusters:
-    kmeans_exp1 = KMeans(n_clusters = 2)
-    print(kmeans_exp1.inertia_)
-    print(Counter(kmeans_exp1.labels_))
-    visualization(data = mms_data, similarity = 3, corr_mat = 1, cluster_labels = kmeans_exp1.labels_, title = 'Supervised K=2')
+    kmeans = KMeans(n_clusters = 2).fit(mms_full_data)
+    print(kmeans.inertia_ )
+    print(Counter(kmeans.labels_))
+    #visualization(data = mms_data, similarity = 3, corr_mat = 1, cluster_labels = kmeans_exp1.labels_, title = 'Unsupervised K=2')
+    #[homog, complete, v_measure], cont_mat
+    print(evaluate_external(target_data, clusters_to_labels_voting(mms_full_data, kmeans.labels_, target_data, target)))
 
-    kmeans_exp2 = KMeans(n_clusters = 10)
-    print(kmeans_exp2.inertia_)
-    print(Counter(kmeans_exp2.labels_))
-    visualization(data = mms_data, similarity = 3, corr_mat = 1, cluster_labels = kmeans_exp2.labels_, title = 'Supervised K=10')
+    kmeans = KMeans(n_clusters = 10).fit(mms_full_data)
+    print(kmeans.inertia_)
+    print(Counter(kmeans.labels_))
+    #visualization(data = mms_data, similarity = 3, corr_mat = 1, cluster_labels = kmeans.labels_, title = 'Unsupervised K=10')
+    print(evaluate_external(target_data, clusters_to_labels_voting(mms_full_data, kmeans.labels_, target_data, target)))
 
-    kmeans_exp3 = KMeans(n_clusters = 20)
-    print(kmeans_exp3.inertia_)
-    print(Counter(kmeans_exp3.labels_))
-    visualization(data = mms_data, similarity = 3, corr_mat = 1, cluster_labels = kmeans_exp3.labels_, title = 'Supervised K=20')
+    kmeans = KMeans(n_clusters = 20).fit(mms_full_data)
+    print(kmeans.inertia_)
+    print(Counter(kmeans.labels_))
+    #visualization(data = mms_data, similarity = 3, corr_mat = 1, cluster_labels = kmeans_exp3.labels_, title = 'Unsupervised K=20')
+    print(evaluate_external(target_data, clusters_to_labels_voting(mms_full_data, kmeans.labels_, target_data, target)))
+
+    print('exiting')
+    sys.exit()
+    print('didnt get here')
+
 
     # Run the experiments
     print('run the experiments')
