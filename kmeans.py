@@ -134,21 +134,25 @@ if __name__ == '__main__':
     target = 'sex'
 
     # Load the data here
-    mms = preprocessing.MinMaxScaler()
+    print('loading...')
     full_data = pd.read_csv('tiny_cci.csv')
     prox_mat = pd.read_csv('tiny_prox_mat.csv')
+    print('loaded')
 
-    # sampling to reduce data size
+    target_data = full_data.loc[:, target].copy()
+
+    # transform to pd
+    print('preprocessing')
     full_data_names = full_data.columns
-    scaled_data_train_wt = mms.fit_transform(data_train)
-    scaled_data_train_wt = pd.DataFrame(scaled_data_train_wt, columns=full_data_names)
+    mms = preprocessing.MinMaxScaler()
+    mms_full_data = mms.fit_transform(full_data)
+    mms_full_data = pd.DataFrame(mms_full_data, columns=full_data_names)
 
     # Separate out the data for various experiments here
-    target_data = data_train.loc[:, target]
-    data_train_wot = data_train.drop(columns=target)
-    data_names = data_train_wot.columns
-    scaled_data_train_wot = mms.fit_transform(data_train_wot)
-    scaled_data_train_wot = pd.DataFrame(scaled_data_train_wot, columns=data_names)
+    mms_data = full_data.drop(columns=target)
+    data_names = mms_data.columns
+    mms_data = mms.fit_transform(mms_data)
+    mms_data = pd.DataFrame(mms_data, columns=data_names)
 
     # Use Method_Evaluation to find optimal K (currently according to SILHUOETTE, but could be any metric)
     #kmeans_scores, agglom_scores, dbscan_scores, spectral_scores = method_evaluation(data, 'sex') # could make argument for which Metric u want optimal K for
@@ -159,20 +163,22 @@ if __name__ == '__main__':
     #    plt.show()
 
     # Run the experiments
+    print('run the experiments')
     k = 10
-
 
     # BTW kmeans gives you kmeans.inertia_, which is SSE
 
     # With target experiments
+    print('with target')
     centroids = []
-    kmeans_wt = KMeans(n_clusters = k).fit(scaled_data_train_wt)
-    pred_labs_wt = clusters_to_labels_voting(scaled_data_train_wt, kmeans_wt.labels_, target_data, target)
-    internal_scores_list, cluster_corr = evaluate_internal(target_data, kmeans_wt.labels_, pred_labs_wt, scaled_data_train_wt, centroids)
+    kmeans_wt = KMeans(n_clusters = k).fit(mms_data)
+    pred_labs_wt = clusters_to_labels_voting(mms_data, kmeans_wt.labels_, target_data, target)
+    internal_scores_list, cluster_corr = evaluate_internal(target_data, kmeans_wt.labels_, pred_labs_wt, mms_data, centroids)
 
     # Without target experiments
-    kmeans_wot = KMeans(n_clusters = k).fit(scaled_data_train_wot)
-    pred_labs_wot = clusters_to_labels_voting(scaled_data_train_wt, kmeans_wot.labels_, target_data, target)
+    print('without target')
+    kmeans_wot = KMeans(n_clusters = k).fit(mms_full_data)
+    pred_labs_wot = clusters_to_labels_voting(mms_full_data, kmeans_wot.labels_, target_data, target)
     external_scores_list, cont_mat = evaluate_external(target_data, pred_labs_wot)
     print(internal_scores_list)
     print(cluster_corr)
