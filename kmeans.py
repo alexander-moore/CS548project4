@@ -22,9 +22,6 @@ def compute_centroids(data, classes):
     # mean of coords gives centroid
     centroid_list = data.groupby(by = classes).mean()
 
-    # hopefully centroid_list is now a list of length( unique(classes))
-    # where each row is a centroid and the columns are the centroid coords
-
     return centroid_list
 
 # Evaluate internal/relative indicies of a clustering given inputs
@@ -65,6 +62,7 @@ def evaluate_external(true_labs, pred_labs):
     return [homog, complete, v_measure], cont_mat
     
 def visualization(data, corr_mat, cluster_labels):
+    print('hi. welcome to visualization:')
 
     ## Full-Dimension Visualizations
     # similarity heatmap
@@ -79,13 +77,18 @@ def visualization(data, corr_mat, cluster_labels):
     pca_data = pca.fit_transform(data)
 
     pca_df = pd.DataFrame(data = pca_data, columns = ['PC1', 'PC2'])
- 
-    print(pca_data)
-    print(pca_data.shape)
+    print(pca_df)
 
+    plt.plot([1, 2, 3, 4], [1, 4, 9, 16])
+    plt.show()
+ 
     # Visualize
-    #plt.plot(pca_df['PC1'], pca_df['PC2'], color = cluster_labels)
-    #plt.show()
+    print(pca_df.columns.values)
+    print(type(pca_df['PC1']))
+    print(type(list(pca_df['PC1'])))
+    plt.scatter(pca_df['PC1'], pca_df['PC2'], c = cluster_labels)
+    #plt.scatter(list(pca_df['PC1']), list(pca_df['PC2']), c = cluster_labels) #color = cluster_labels
+    plt.show()
 
 
 # Turns arbitrary cluster labelling [clus1, clus2, ..] into the same type as our target (ex. 1 male 0 female) by getting the mode target of each cluster
@@ -193,6 +196,8 @@ if __name__ == '__main__':
                                                            centroids = centroids,
                                                            prox_mat = prox_mat)
     print(internal_scores_list)
+
+    visualization(data = mms_data, corr_mat = 1, cluster_labels = kmeans_wt.labels_)
 
     # Without target experiments
     print('without target')
