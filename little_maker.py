@@ -8,7 +8,7 @@ from sklearn import preprocessing
 mms = preprocessing.MinMaxScaler()
 
 data = pd.read_csv('data/clean_census_income.csv')
-mms_data = mms.fit_transform(data)
+mms_data = pd.DataFrame(mms.fit_transform(data), columns = data.columns.values)
 
 tiny_data, _ = train_test_split(mms_data, test_size=0.95) # trying 10% for now
 tiny_prox_mat = pd.DataFrame(pairwise_distances(tiny_data))
