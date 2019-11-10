@@ -11,6 +11,7 @@ from sklearn.metrics import fowlkes_mallows_score
 #from sklearn.metrics import matthews_corrcoef
 from sklearn.decomposition import PCA
 from sklearn.manifold import MDS
+from collections import Counter
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -166,6 +167,23 @@ if __name__ == '__main__':
     data_names = mms_data.columns
     mms_data = mms.fit_transform(mms_data)
     mms_data = pd.DataFrame(mms_data, columns=data_names)
+
+    # Write directly to experiments:
+    # n clusters:
+    kmeans_exp1 = KMeans(n_clusters = 2)
+    print(kmeans_exp1.inertia_)
+    print(Counter(kmeans_exp1.labels_))
+    visualization(data = mms_data, similarity = 3, corr_mat = 1, cluster_labels = kmeans_exp1.labels_, title = 'Supervised K=2')
+
+    kmeans_exp2 = KMeans(n_clusters = 10)
+    print(kmeans_exp2.inertia_)
+    print(Counter(kmeans_exp2.labels_))
+    visualization(data = mms_data, similarity = 3, corr_mat = 1, cluster_labels = kmeans_exp2.labels_, title = 'Supervised K=10')
+
+    kmeans_exp3 = KMeans(n_clusters = 20)
+    print(kmeans_exp3.inertia_)
+    print(Counter(kmeans_exp3.labels_))
+    visualization(data = mms_data, similarity = 3, corr_mat = 1, cluster_labels = kmeans_exp3.labels_, title = 'Supervised K=20')
 
     # Run the experiments
     print('run the experiments')
