@@ -6,6 +6,7 @@ import re
 import sklearn as sk
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.metrics import pairwise_distances
 import numpy as np
 
 # 42 headers including 'income' in the last column and 'instance weight' in the middle 
@@ -243,18 +244,12 @@ data.to_csv('clean_census_income.csv', index=False)
 
 # creating and saving log-census data
 
-def log_func(x):
-	return np.log(x+.01)
-
 mod_data = data.copy()
-mod_data['dividends from stocks'] = mod_data['dividends from stocks'].apply(log_func)
-mod_data['wage per hour'] = mod_data['wage per hour'].apply(log_func)
-mod_data['capital gains'] = mod_data['capital gains'].apply(log_func)
-mod_data['capital losses'] = mod_data['capital losses'].apply(log_func)
 
-print(mod_data['dividends from stocks'])
-print(data['dividends from stocks'])
-print(mod_data)
-mod_data.to_csv('log_cci.csv', index = False)
+tiny_data, _ = train_test_split(mod_data, test_size=0.90) # trying 10% for now
+tiny_prox_mat = pairwise_distances(tiny_data)
+
+tiny_data.to_csv('tiny_cci.csv', index = False)
+tiny_prox_mat.to_csv('tiny_prox_mat.csv', index = False)
 
 # https://stackoverflow.com/questions/27928275/find-p-value-significance-in-scikit-learn-linearregression#42677750
