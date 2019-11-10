@@ -4,7 +4,6 @@ import os, sys
 import sklearn.metrics as skm
 
 from sklearn import preprocessing
-from sklearn.model_selection import train_test_split
 from sklearn.datasets import load_digits
 from sklearn.cluster import KMeans
 from sklearn.metrics import confusion_matrix
@@ -128,9 +127,6 @@ def method_evaluation(data, target = 'sex', optimization_metric = 'Silhuoette'):
 
     method_names = ['SSE', 'Adj Rand', 'Norm Mut Info', 'Adj Mut Info', 'Homog', 'Completeness', 'V-Measure']
 
-
-    #pd.DataFrame(agglom_k_score, columns = method_names), 
-
     return pd.DataFrame(kmeans_k_score, columns = method_names)
 
 if __name__ == '__main__':
@@ -140,7 +136,7 @@ if __name__ == '__main__':
     # Load the data here
     mms = preprocessing.MinMaxScaler()
     full_data = pd.read_csv('tiny_cci.csv')
-    prox_mat = pd.read_csv('tiny_prox_mat.csv ')
+    prox_mat = pd.read_csv('tiny_prox_mat.csv')
 
     # sampling to reduce data size
     full_data_names = full_data.columns
