@@ -1,6 +1,6 @@
-# naive kmeans
-
 #! /usr/bin/env python3
+
+# naive kmeans
 # cluster.py
 import os, sys
 import sklearn.metrics as skm

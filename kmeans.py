@@ -46,12 +46,15 @@ def evaluate_internal(true_labs, cluster_labs, pred_labs, data, centroids, prox_
                 match_matrix[i, j] = 0
 
     # correlation of elements of prox_mat and match_mat, ideally close to -1:
-    #clus_cor = np.corrcoef(np.ndarray(prox_mat).flatten(), match_matrix.flatten())
+    clus_cor = np.corrcoef(prox_mat.to_numpy().flatten(), match_matrix.flatten())
+
+    # Corr matrix of 2 matrices??? Leave for the time being
     #clus_cor_matrix = np.corrcoef(prox_mat, match_matrix)
-    #return [SSE, adj_rand, norm_info, adj_info, silhuoette], clus_cor
-    # NOTE: returning the correlation between 2 LOOONG arrays, also returning the corr matrix between the two matrices???? Let if for now I guess
     #return [adj_rand, norm_info, adj_info, silhuoette, clus_cor[0,1]] #, clus_cor_matrix
-    return [adj_rand, norm_info, adj_info, silhuoette, 1] #, clus_cor_matrix
+
+    # NOTE: returning the correlation between 2 LOOONG arrays, also returning the corr matrix between the two matrices???? Let if for now I guess
+    return [adj_rand, norm_info, adj_info, silhuoette, clus_cor[0,1]]
+    #return [adj_rand, norm_info, adj_info, silhuoette, 1]
 
 # Evaluate external indicies of a clustering given true and predicted labels
 def evaluate_external(true_labs, pred_labs):
@@ -197,10 +200,6 @@ if __name__ == '__main__':
     centroids = kmeans_wot.inertia_
     pred_labs_wot = clusters_to_labels_voting(mms_full_data, kmeans_wot.labels_, target_data, target)
     external_scores_list, cont_mat = evaluate_external(target_data, pred_labs_wot)
-    print(internal_scores_list)
-    print(cluster_corr)
-    # NOTE: DO NOT RUN VIS, I think the heatmap is too big and crashes computers
-    #visualization(scaled_data_train_wt, cluster_corr, target)
     print(external_scores_list)
     print(cont_mat)
     #visualization(scaled_data_train_wot, cont_mat, target)
@@ -210,3 +209,4 @@ if __name__ == '__main__':
 
 # https://scikit-learn.org/stable/auto_examples/cluster/plot_dbscan.html#sphx-glr-auto-examples-cluster-plot-dbscan-py
 # noel read this ^^ really good code that overall i think we should look like
+# It's pretty good. I like the print statements, but they are only doing it for 1 k value. I think in general, we're on a good track.
