@@ -242,14 +242,4 @@ print(data)
 data.to_csv('clean_census_income.csv', index=False)
 
 
-# creating and saving log-census data
-
-mod_data = data.copy()
-
-tiny_data, _ = train_test_split(mod_data, test_size=0.90) # trying 10% for now
-tiny_prox_mat = pairwise_distances(tiny_data)
-
-tiny_data.to_csv('tiny_cci.csv', index = False)
-tiny_prox_mat.to_csv('tiny_prox_mat.csv', index = False)
-
 # https://stackoverflow.com/questions/27928275/find-p-value-significance-in-scikit-learn-linearregression#42677750
