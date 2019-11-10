@@ -67,9 +67,9 @@ def visualization(data, similarity, corr_mat, cluster_labels, title):
 
     ## Full-Dimension Visualizations
     # similarity heatmap
-    sim_sorted = similarity.sort_data(by = classes)
-    heat = sns.heatmap(sim_sorted)
-    heat.show()
+    #sim_sorted = similarity.sort_data(by = classes)
+    #heat = sns.heatmap(sim_sorted)
+    #heat.show()
 
     ## Reduced Dimension Visualizations
     pca = PCA(n_components=2)
@@ -188,9 +188,32 @@ if __name__ == '__main__':
                                                            data = mms_data, 
                                                            centroids = centroids,
                                                            prox_mat = prox_mat)
+    print('[adj_rand, norm_info, adj_info, silhuoette, clus_cor[0,1]]')
     print(internal_scores_list)
 
-    visualization(data = mms_data, similarity = prox_mat, corr_mat = 1, cluster_labels = kmeans_wt.labels_, title = 'Supervised K-Means')
+    visualization(data = mms_data, similarity = prox_mat, corr_mat = 1, cluster_labels = kmeans_wt.labels_, title = 'Supervised K-Means (10)')
+
+    k = 2
+    print('k = 2:')
+
+    centroids = []
+    kmeans_wt = KMeans(n_clusters = k).fit(mms_data)
+    centroids = kmeans_wt.inertia_
+    print(kmeans_wt)
+    pred_labs_wt = clusters_to_labels_voting(mms_data, kmeans_wt.labels_, target_data, target)
+    print('goit pred labs wt')
+    #def evaluate_internal(true_labs, cluster_labs, pred_labs, data, centroids, prox_mat):
+    internal_scores_list = evaluate_internal(true_labs = target_data, 
+                                                           cluster_labs = kmeans_wt.labels_, 
+                                                           pred_labs = pred_labs_wt, 
+                                                           data = mms_data, 
+                                                           centroids = centroids,
+                                                           prox_mat = prox_mat)
+    print('[adj_rand, norm_info, adj_info, silhuoette, clus_cor[0,1]]')
+    print(internal_scores_list)
+
+    visualization(data = mms_data, similarity = prox_mat, corr_mat = 1, cluster_labels = kmeans_wt.labels_, title = 'Supervised K-Means (2)')
+
 
     # Without target experiments
     print('without target')
@@ -198,6 +221,7 @@ if __name__ == '__main__':
     centroids = kmeans_wot.inertia_
     pred_labs_wot = clusters_to_labels_voting(mms_full_data, kmeans_wot.labels_, target_data, target)
     external_scores_list, cont_mat = evaluate_external(target_data, pred_labs_wot)
+    print('[homog, complete, v_measure], cont_mat')
     print(external_scores_list)
     print(cont_mat)
 
