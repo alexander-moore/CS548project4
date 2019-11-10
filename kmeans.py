@@ -10,6 +10,7 @@ from sklearn.metrics import confusion_matrix
 from sklearn.metrics import fowlkes_mallows_score
 #from sklearn.metrics import matthews_corrcoef
 from sklearn.decomposition import PCA
+from sklearn.manifold import MDS
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -61,7 +62,7 @@ def evaluate_external(true_labs, pred_labs):
     cont_mat = skm.cluster.contingency_matrix(true_labs, pred_labs)
     return [homog, complete, v_measure], cont_mat
     
-def visualization(data, corr_mat, cluster_labels):
+def visualization(data, corr_mat, cluster_labels, title):
     print('hi. welcome to visualization:')
 
     ## Full-Dimension Visualizations
@@ -77,18 +78,27 @@ def visualization(data, corr_mat, cluster_labels):
     pca_data = pca.fit_transform(data)
 
     pca_df = pd.DataFrame(data = pca_data, columns = ['PC1', 'PC2'])
-    print(pca_df)
 
-    plt.plot([1, 2, 3, 4], [1, 4, 9, 16])
-    plt.show()
- 
     # Visualize
-    print(pca_df.columns.values)
-    print(type(pca_df['PC1']))
-    print(type(list(pca_df['PC1'])))
-    plt.scatter(pca_df['PC1'], pca_df['PC2'], c = cluster_labels)
-    #plt.scatter(list(pca_df['PC1']), list(pca_df['PC2']), c = cluster_labels) #color = cluster_labels
+    plt.scatter(pca_df['PC1'], pca_df['PC2'], c = cluster_labels, alpha = .5)
+    plt.xlabel('PC1')
+    plt.ylabel('PC2')
+    plt.title(title)
     plt.show()
+
+    mds = MDS(n_components = 2, metric = False)
+    mds_data = mds.fit_transform(data)
+    print(mds_data.shape)
+    mds_df = pd.DataFrame(data = mds_data, columns = ['1', '2'])
+
+    plt.scatter(mds_df['1'], mds_df['2'], c = cluster_labels, alpha = .5)
+    plt.xlabel('MDS dim 1')
+    plt.ylabel('MDS dim 2')
+    plt.title(title)
+    plt.show()
+
+
+
 
 
 # Turns arbitrary cluster labelling [clus1, clus2, ..] into the same type as our target (ex. 1 male 0 female) by getting the mode target of each cluster
@@ -115,23 +125,15 @@ def clusters_to_labels_voting(data, clus_labels, target_labels, target):
 def method_evaluation(data, target = 'sex', optimization_metric = 'Silhuoette'):
 
     full_data = data.copy() # we need full data (no drop target) for the mode-voting
-
     target_data = data.loc[:, target]
     target_names = [str(x) for x in target_data.unique().tolist()] # i still dont know what this is
-
     true_labs = target_data
-
     data = data.drop(columns=target)
 
     for k in range(1, 15):
-
-        # Kmeans
         kmeans = KMeans(n_clusters = k).fit(data) #random state = 0 ?
-        #print(kmeans.labels_)
         kmeans_clus_labels = kmeans.labels_
-        
         kmeans_pred_labs = clusters_to_labels_voting(full_data, kmeans_clus_labels)
-
         kmeans_k_score.append(evaluate(true_labs, kmeans_pred_labs, data, kmeans.cluster_centers_, k)[0]) # [0] because only taking the list of scores because im not gonna mess w matrix
     
     print('K-Means Clustering Scores per K: ')
@@ -166,14 +168,6 @@ if __name__ == '__main__':
     mms_data = mms.fit_transform(mms_data)
     mms_data = pd.DataFrame(mms_data, columns=data_names)
 
-    # Use Method_Evaluation to find optimal K (currently according to SILHUOETTE, but could be any metric)
-    #kmeans_scores, agglom_scores, dbscan_scores, spectral_scores = method_evaluation(data, 'sex') # could make argument for which Metric u want optimal K for
-
-    # Optimized K-means
-    # can find best score here by looking at matrix
-    #    plt.plot(x = kmeans_scores['k'], y = kmeans_scores['silhuoette'])
-    #    plt.show()
-
     # Run the experiments
     print('run the experiments')
     k = 10
@@ -197,7 +191,7 @@ if __name__ == '__main__':
                                                            prox_mat = prox_mat)
     print(internal_scores_list)
 
-    visualization(data = mms_data, corr_mat = 1, cluster_labels = kmeans_wt.labels_)
+    visualization(data = mms_data, corr_mat = 1, cluster_labels = kmeans_wt.labels_, title = 'Supervised K-Means')
 
     # Without target experiments
     print('without target')
@@ -207,7 +201,7 @@ if __name__ == '__main__':
     external_scores_list, cont_mat = evaluate_external(target_data, pred_labs_wot)
     print(external_scores_list)
     print(cont_mat)
-    #visualization(scaled_data_train_wot, cont_mat, target)
+
     sys.exit()
 
 
