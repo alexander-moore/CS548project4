@@ -46,11 +46,12 @@ def evaluate_internal(true_labs, cluster_labs, pred_labs, data, centroids, prox_
                 match_matrix[i, j] = 0
 
     # correlation of elements of prox_mat and match_mat, ideally close to -1:
-    clus_cor = np.corrcoef(prox_mat.flatten(), match_matrix.flatten())
+    #clus_cor = np.corrcoef(np.ndarray(prox_mat).flatten(), match_matrix.flatten())
     #clus_cor_matrix = np.corrcoef(prox_mat, match_matrix)
     #return [SSE, adj_rand, norm_info, adj_info, silhuoette], clus_cor
     # NOTE: returning the correlation between 2 LOOONG arrays, also returning the corr matrix between the two matrices???? Let if for now I guess
-    return [adj_rand, norm_info, adj_info, silhuoette, clus_cor[0,1]] #, clus_cor_matrix
+    #return [adj_rand, norm_info, adj_info, silhuoette, clus_cor[0,1]] #, clus_cor_matrix
+    return [adj_rand, norm_info, adj_info, silhuoette, 1] #, clus_cor_matrix
 
 # Evaluate external indicies of a clustering given true and predicted labels
 def evaluate_external(true_labs, pred_labs):
@@ -178,7 +179,7 @@ if __name__ == '__main__':
     pred_labs_wt = clusters_to_labels_voting(mms_data, kmeans_wt.labels_, target_data, target)
     print('goit pred labs wt')
     #def evaluate_internal(true_labs, cluster_labs, pred_labs, data, centroids, prox_mat):
-    internal_scores_list, cluster_corr = evaluate_internal(true_labs = target_data, 
+    internal_scores_list = evaluate_internal(true_labs = target_data, 
                                                            cluster_labs = kmeans_wt.labels_, 
                                                            pred_labs = pred_labs_wt, 
                                                            data = mms_data, 
