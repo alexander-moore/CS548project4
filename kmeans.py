@@ -84,7 +84,8 @@ def visualization(data, corr_mat, cluster_labels):
 def clusters_to_labels_voting(data, clus_labels, target_labels, target):
 
     method_pred_labs = np.zeros(len(clus_labels))
-    target_index = data.columns.get_loc(target)
+    #target_index = data.columns.get_loc(target)
+    #print(target_index)
 
     for clus in set(clus_labels): # for each cluster
         cluster = []
@@ -172,12 +173,23 @@ if __name__ == '__main__':
     print('with target')
     centroids = []
     kmeans_wt = KMeans(n_clusters = k).fit(mms_data)
+    centroids = kmeans_wt.inertia_
+    print(kmeans_wt)
     pred_labs_wt = clusters_to_labels_voting(mms_data, kmeans_wt.labels_, target_data, target)
-    internal_scores_list, cluster_corr = evaluate_internal(target_data, kmeans_wt.labels_, pred_labs_wt, mms_data, centroids)
+    print('goit pred labs wt')
+    #def evaluate_internal(true_labs, cluster_labs, pred_labs, data, centroids, prox_mat):
+    internal_scores_list, cluster_corr = evaluate_internal(true_labs = target_data, 
+                                                           cluster_labs = kmeans_wt.labels_, 
+                                                           pred_labs = pred_labs_wt, 
+                                                           data = mms_data, 
+                                                           centroids = centroids,
+                                                           prox_mat = prox_mat)
+    print(internal_scores_list)
 
     # Without target experiments
     print('without target')
     kmeans_wot = KMeans(n_clusters = k).fit(mms_full_data)
+    centroids = kmeans_wot.inertia_
     pred_labs_wot = clusters_to_labels_voting(mms_full_data, kmeans_wot.labels_, target_data, target)
     external_scores_list, cont_mat = evaluate_external(target_data, pred_labs_wot)
     print(internal_scores_list)
@@ -191,3 +203,5 @@ if __name__ == '__main__':
 
 
 
+# https://scikit-learn.org/stable/auto_examples/cluster/plot_dbscan.html#sphx-glr-auto-examples-cluster-plot-dbscan-py
+# noel read this ^^ really good code that overall i think we should look like
