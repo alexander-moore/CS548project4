@@ -1,3 +1,5 @@
+# naive kmeans
+
 #! /usr/bin/env python3
 # cluster.py
 import os, sys
@@ -60,7 +62,7 @@ def evaluate_external(true_labs, pred_labs):
     v_measure = skm.v_measure_score(true_labs, pred_labs)
     cont_mat = skm.cluster.contingency_matrix(true_labs, pred_labs)
     return [homog, complete, v_measure], cont_mat
-    
+
 def visualization(data, corr_mat, cluster_labels):
 
     ## Full-Dimension Visualizations
@@ -142,7 +144,7 @@ if __name__ == '__main__':
     # Load the data here
     print('loading...')
     full_data = pd.read_csv('tiny_cci.csv')
-    prox_mat = pd.read_csv('tiny_prox_mat.csv')
+    #prox_mat = pd.read_csv('tiny_prox_mat.csv')
     print('loaded')
 
     target_data = full_data.loc[:, target].copy()
@@ -182,14 +184,15 @@ if __name__ == '__main__':
     print(kmeans_wt)
     pred_labs_wt = clusters_to_labels_voting(mms_data, kmeans_wt.labels_, target_data, target)
     print('goit pred labs wt')
-    #def evaluate_internal(true_labs, cluster_labs, pred_labs, data, centroids, prox_mat):
-    internal_scores_list = evaluate_internal(true_labs = target_data, 
-                                                           cluster_labs = kmeans_wt.labels_, 
-                                                           pred_labs = pred_labs_wt, 
-                                                           data = mms_data, 
-                                                           centroids = centroids,
-                                                           prox_mat = prox_mat)
-    print(internal_scores_list)
+    #internal_scores_list = evaluate_internal(true_labs = target_data, 
+                                                           #cluster_labs = kmeans_wt.labels_, 
+                                                           #pred_labs = pred_labs_wt, 
+                                                           #data = mms_data, 
+                                                           #centroids = centroids,
+                                                           #prox_mat = prox_mat)
+    #print(internal_scores_list)
+
+    visualization(mms_data, 2, pred_labs_wt)
 
     # Without target experiments
     print('without target')
