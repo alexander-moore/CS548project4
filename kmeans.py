@@ -124,7 +124,6 @@ def clusters_to_labels_voting(data, clus_labels, target_labels, target):
 # method_evaluation should create, display, and select best scoring K across methods
 def method_evaluation(full_data, data, prox_mat, target_data, target = 'sex', optimization_metric = 'Silhuoette'):
     scores = np.zeros(9)
-    print(scores)
     for k in range(2, 50, 3):
         scores_for_k = [k]
         print('k = ' + str(k))
@@ -155,7 +154,7 @@ def method_evaluation(full_data, data, prox_mat, target_data, target = 'sex', op
         print(cont_mat)
         scores_for_k.extend(external_scores_list)
         print(scores_for_k)
-        if k == 1:
+        if k == 2:
             scores = np.array(scores_for_k)
         else:
             scores = np.vstack((scores, np.array(scores_for_k)))
@@ -166,6 +165,13 @@ def method_evaluation(full_data, data, prox_mat, target_data, target = 'sex', op
     method_names = ['k', 'Adj Rand', 'Norm Mut Info', 'Adj Mut Info', 'Silhuoette', 'Clus_cor', 'Homog', 'Completeness', 'V-Measure']
 
     return pd.DataFrame(scores, columns = method_names)
+
+def graph_method_eval(scores):
+    for i in range(0, scores.shape[1] - 1):
+        plt.figure(i)
+        plt.plot(scores.loc[:, 'k'], scores.iloc[:, i+1])
+        plt.title('{} graphed over varying k'.format(scores.columns[i+1]))
+    plt.show()
 
 if __name__ == '__main__':
     # Delcare target
@@ -195,6 +201,8 @@ if __name__ == '__main__':
     # Find a semi optimal k by running a lot and returning a matrix of scores
     scores = method_evaluation(mms_full_data, mms_data, prox_mat, target_data, target = 'sex', optimization_metric = 'Silhuoette')
     print(scores)
+    graph_method_eval(scores)
+    print('exiting')
     sys.exit()
 
     # Write directly to experiments:
