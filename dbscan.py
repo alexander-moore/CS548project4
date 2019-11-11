@@ -130,7 +130,7 @@ def method_evaluation(full_data, data, prox_mat, target_data, target = 'sex', op
         # With target experiments
         print('DBSCAN with target')
         dbscan_wt = DBSCAN(n_clusters = k).fit(full_data)
-        centroids = dbscan_wt.inertia_
+        centroids = compute_centroids(full_data, dbscan_wt.labels_)
         pred_labs_wt = clusters_to_labels_voting(full_data, dbscan_wt.labels_, target_data, target)
         #def evaluate_internal(true_labs, cluster_labs, pred_labs, data, centroids, prox_mat):
         internal_scores_list = evaluate_internal(true_labs = target_data, 
@@ -146,7 +146,7 @@ def method_evaluation(full_data, data, prox_mat, target_data, target = 'sex', op
         # Without target experiments
         print('DBSCAN without target')
         dbscan_wot = DBSCAN(n_clusters = k).fit(data)
-        centroids = dbscan_wot.inertia_
+        centroids = compute_centroids(data, dbscan_wot.labels_)
         pred_labs_wot = clusters_to_labels_voting(data, dbscan_wot.labels_, target_data, target)
         external_scores_list, cont_mat = evaluate_external(target_data, pred_labs_wot)
         print('[homog, complete, v_measure], cont_mat')
@@ -262,7 +262,7 @@ if __name__ == '__main__':
 
     centroids = []
     dbscan_wt = DBSCAN(n_clusters = k).fit(mms_data)
-    centroids = dbscan_wt.inertia_
+    centroids = compute_centroids(mms_data, dbscan_wt.labels_)
     print(dbscan_wt)
     pred_labs_wt = clusters_to_labels_voting(mms_data, dbscan_wt.labels_, target_data, target)
     print('goit pred labs wt')
@@ -282,7 +282,7 @@ if __name__ == '__main__':
     # Without target experiments
     print('without target')
     dbscan_wot = DBSCAN(n_clusters = k).fit(mms_full_data)
-    centroids = dbscan_wot.inertia_
+    centroids = compute_centroids(mms_full_data, dbscan_wot.labels_)
     pred_labs_wot = clusters_to_labels_voting(mms_full_data, dbscan_wot.labels_, target_data, target)
     external_scores_list, cont_mat = evaluate_external(target_data, pred_labs_wot)
     print('[homog, complete, v_measure], cont_mat')
