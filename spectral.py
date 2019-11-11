@@ -5,7 +5,7 @@ import sklearn.metrics as skm
 
 from sklearn import preprocessing
 from sklearn.datasets import load_digits
-from sklearn.cluster import KMeans
+from sklearn.cluster import SpectralClustering
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import fowlkes_mallows_score
 #from sklearn.metrics import matthews_corrcoef
@@ -128,13 +128,13 @@ def method_evaluation(full_data, data, prox_mat, target_data, target = 'sex', op
         scores_for_k = [k]
         print('k = ' + str(k))
         # With target experiments
-        print('Kmeans with target')
-        kmeans_wt = KMeans(n_clusters = k).fit(full_data)
-        centroids = kmeans_wt.inertia_
-        pred_labs_wt = clusters_to_labels_voting(full_data, kmeans_wt.labels_, target_data, target)
+        print('Spectral with target')
+        spectral_wt = SpectralClustering(n_clusters = k).fit(full_data)
+        centroids = spectral_wt.inertia_
+        pred_labs_wt = clusters_to_labels_voting(full_data, spectral_wt.labels_, target_data, target)
         #def evaluate_internal(true_labs, cluster_labs, pred_labs, data, centroids, prox_mat):
         internal_scores_list = evaluate_internal(true_labs = target_data, 
-                                                 cluster_labs = kmeans_wt.labels_, 
+                                                 cluster_labs = spectral_wt.labels_, 
                                                  pred_labs = pred_labs_wt, 
                                                  data = full_data, 
                                                  centroids = centroids,
@@ -144,10 +144,10 @@ def method_evaluation(full_data, data, prox_mat, target_data, target = 'sex', op
         scores_for_k.extend(internal_scores_list)
 
         # Without target experiments
-        print('Kmeans without target')
-        kmeans_wot = KMeans(n_clusters = k).fit(data)
-        centroids = kmeans_wot.inertia_
-        pred_labs_wot = clusters_to_labels_voting(data, kmeans_wot.labels_, target_data, target)
+        print('Spectral without target')
+        spectral_wot = SpectralClustering(n_clusters = k).fit(data)
+        centroids = spectral_wot.inertia_
+        pred_labs_wot = clusters_to_labels_voting(data, spectral_wot.labels_, target_data, target)
         external_scores_list, cont_mat = evaluate_external(target_data, pred_labs_wot)
         print('[homog, complete, v_measure], cont_mat')
         print(external_scores_list)
@@ -207,24 +207,24 @@ if __name__ == '__main__':
 
     # Write directly to experiments:
     # n clusters:
-    kmeans = KMeans(n_clusters = 2).fit(mms_full_data)
-    print(kmeans.inertia_ )
-    print(Counter(kmeans.labels_))
+    spectral = SpectralClustering(n_clusters = 2).fit(mms_full_data)
+    #print(spectral.inertia_ )
+    print(Counter(spectral.labels_))
     #visualization(data = mms_data, similarity = 3, corr_mat = 1, cluster_labels = kmeans_exp1.labels_, title = 'Unsupervised K=2')
     #[homog, complete, v_measure], cont_mat
-    print(evaluate_external(target_data, clusters_to_labels_voting(mms_full_data, kmeans.labels_, target_data, target)))
+    print(evaluate_external(target_data, clusters_to_labels_voting(mms_full_data, spectral.labels_, target_data, target)))
 
-    kmeans = KMeans(n_clusters = 10).fit(mms_full_data)
-    print(kmeans.inertia_)
-    print(Counter(kmeans.labels_))
+    spectral = SpectralClustering(n_clusters = 10).fit(mms_full_data)
+    #print(spectral.inertia_)
+    print(Counter(spectral.labels_))
     #visualization(data = mms_data, similarity = 3, corr_mat = 1, cluster_labels = kmeans.labels_, title = 'Unsupervised K=10')
-    print(evaluate_external(target_data, clusters_to_labels_voting(mms_full_data, kmeans.labels_, target_data, target)))
+    print(evaluate_external(target_data, clusters_to_labels_voting(mms_full_data, spectral.labels_, target_data, target)))
 
-    kmeans = KMeans(n_clusters = 20).fit(mms_full_data)
-    print(kmeans.inertia_)
-    print(Counter(kmeans.labels_))
+    spectral = SpectralClustering(n_clusters = 20).fit(mms_full_data)
+    #print(spectral.inertia_)
+    print(Counter(spectral.labels_))
     #visualization(data = mms_data, similarity = 3, corr_mat = 1, cluster_labels = kmeans_exp3.labels_, title = 'Unsupervised K=20')
-    print(evaluate_external(target_data, clusters_to_labels_voting(mms_full_data, kmeans.labels_, target_data, target)))
+    print(evaluate_external(target_data, clusters_to_labels_voting(mms_full_data, spectral.labels_, target_data, target)))
 
     print('exiting')
     sys.exit()
@@ -240,14 +240,14 @@ if __name__ == '__main__':
     # With target experiments
     print('with target')
     centroids = []
-    kmeans_wt = KMeans(n_clusters = k).fit(mms_data)
-    centroids = kmeans_wt.inertia_
-    print(kmeans_wt)
-    pred_labs_wt = clusters_to_labels_voting(mms_data, kmeans_wt.labels_, target_data, target)
+    spectral_wt = SpectralClustering(n_clusters = k).fit(mms_data)
+    centroids = spectral_wt.inertia_
+    print(spectral_wt)
+    pred_labs_wt = clusters_to_labels_voting(mms_data, spectral_wt.labels_, target_data, target)
     print('goit pred labs wt')
     #def evaluate_internal(true_labs, cluster_labs, pred_labs, data, centroids, prox_mat):
     internal_scores_list = evaluate_internal(true_labs = target_data, 
-                                                           cluster_labs = kmeans_wt.labels_, 
+                                                           cluster_labs = spectral_wt.labels_, 
                                                            pred_labs = pred_labs_wt, 
                                                            data = mms_data, 
                                                            centroids = centroids,
@@ -255,20 +255,20 @@ if __name__ == '__main__':
     print('[adj_rand, norm_info, adj_info, silhuoette, clus_cor[0,1]]')
     print(internal_scores_list)
 
-    visualization(data = mms_data, similarity = prox_mat, corr_mat = 1, cluster_labels = kmeans_wt.labels_, title = 'Supervised K-Means (10)')
+    visualization(data = mms_data, similarity = prox_mat, corr_mat = 1, cluster_labels = spectral_wt.labels_, title = 'Supervised K-Means (10)')
 
     k = 2
     print('k = 2:')
 
     centroids = []
-    kmeans_wt = KMeans(n_clusters = k).fit(mms_data)
-    centroids = kmeans_wt.inertia_
-    print(kmeans_wt)
-    pred_labs_wt = clusters_to_labels_voting(mms_data, kmeans_wt.labels_, target_data, target)
+    spectral_wt = SpectralClustering(n_clusters = k).fit(mms_data)
+    centroids = spectral_wt.inertia_
+    print(spectral_wt)
+    pred_labs_wt = clusters_to_labels_voting(mms_data, spectral_wt.labels_, target_data, target)
     print('goit pred labs wt')
     #def evaluate_internal(true_labs, cluster_labs, pred_labs, data, centroids, prox_mat):
     internal_scores_list = evaluate_internal(true_labs = target_data, 
-                                                           cluster_labs = kmeans_wt.labels_, 
+                                                           cluster_labs = spectral_wt.labels_, 
                                                            pred_labs = pred_labs_wt, 
                                                            data = mms_data, 
                                                            centroids = centroids,
@@ -276,14 +276,14 @@ if __name__ == '__main__':
     print('[adj_rand, norm_info, adj_info, silhuoette, clus_cor[0,1]]')
     print(internal_scores_list)
 
-    visualization(data = mms_data, similarity = prox_mat, corr_mat = 1, cluster_labels = kmeans_wt.labels_, title = 'Supervised K-Means (2)')
+    visualization(data = mms_data, similarity = prox_mat, corr_mat = 1, cluster_labels = spectral_wt.labels_, title = 'Supervised K-Means (2)')
 
 
     # Without target experiments
     print('without target')
-    kmeans_wot = KMeans(n_clusters = k).fit(mms_full_data)
-    centroids = kmeans_wot.inertia_
-    pred_labs_wot = clusters_to_labels_voting(mms_full_data, kmeans_wot.labels_, target_data, target)
+    spectral_wot = SpectralClustering(n_clusters = k).fit(mms_full_data)
+    centroids = spectral_wot.inertia_
+    pred_labs_wot = clusters_to_labels_voting(mms_full_data, spectral_wot.labels_, target_data, target)
     external_scores_list, cont_mat = evaluate_external(target_data, pred_labs_wot)
     print('[homog, complete, v_measure], cont_mat')
     print(external_scores_list)
