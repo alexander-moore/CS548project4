@@ -241,7 +241,7 @@ if __name__ == '__main__':
     print('with target')
     centroids = []
     agglom_wt = AgglomerativeClustering(n_clusters = k).fit(mms_data)
-    centroids = agglom_wt.inertia_
+    centroids = compute_centroids(mms_data, agglom_wt.labels_)
     print(agglom_wt)
     pred_labs_wt = clusters_to_labels_voting(mms_data, agglom_wt.labels_, target_data, target)
     print('goit pred labs wt')
@@ -262,7 +262,7 @@ if __name__ == '__main__':
 
     centroids = []
     agglom_wt = AgglomerativeClustering(n_clusters = k).fit(mms_data)
-    centroids = agglom_wt.inertia_
+    centroids = compute_centroids(mms_data, agglom_wt.labels_)
     print(agglom_wt)
     pred_labs_wt = clusters_to_labels_voting(mms_data, agglom_wt.labels_, target_data, target)
     print('goit pred labs wt')
@@ -282,7 +282,7 @@ if __name__ == '__main__':
     # Without target experiments
     print('without target')
     agglom_wot = AgglomerativeClustering(n_clusters = k).fit(mms_full_data)
-    centroids = agglom_wot.inertia_
+    centroids = compute_centroids(mms_full_data, agglom_wt.labels_)
     pred_labs_wot = clusters_to_labels_voting(mms_full_data, agglom_wot.labels_, target_data, target)
     external_scores_list, cont_mat = evaluate_external(target_data, pred_labs_wot)
     print('[homog, complete, v_measure], cont_mat')
