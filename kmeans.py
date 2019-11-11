@@ -122,26 +122,56 @@ def clusters_to_labels_voting(data, clus_labels, target_labels, target):
     return method_pred_labs
 
 # method_evaluation should create, display, and select best scoring K across methods
-def method_evaluation(data, target = 'sex', optimization_metric = 'Silhuoette'):
+def method_evaluation(full_data, data, prox_mat, target_data, target = 'sex', optimization_metric = 'Silhuoette'):
+    scores = np.zeros(9)
+    for k in range(2, 50, 3):
+        scores_for_k = [k]
+        print('k = ' + str(k))
+        # With target experiments
+        print('Kmeans with target')
+        kmeans_wt = KMeans(n_clusters = k).fit(full_data)
+        centroids = kmeans_wt.inertia_
+        pred_labs_wt = clusters_to_labels_voting(full_data, kmeans_wt.labels_, target_data, target)
+        #def evaluate_internal(true_labs, cluster_labs, pred_labs, data, centroids, prox_mat):
+        internal_scores_list = evaluate_internal(true_labs = target_data, 
+                                                 cluster_labs = kmeans_wt.labels_, 
+                                                 pred_labs = pred_labs_wt, 
+                                                 data = full_data, 
+                                                 centroids = centroids,
+                                                 prox_mat = prox_mat)
+        print('[adj_rand, norm_info, adj_info, silhuoette, clus_cor[0,1]]')
+        print(internal_scores_list)
+        scores_for_k.extend(internal_scores_list)
 
-    full_data = data.copy() # we need full data (no drop target) for the mode-voting
-    target_data = data.loc[:, target]
-    target_names = [str(x) for x in target_data.unique().tolist()] # i still dont know what this is
-    true_labs = target_data
-    data = data.drop(columns=target)
-
-    for k in range(1, 15):
-        kmeans = KMeans(n_clusters = k).fit(data) #random state = 0 ?
-        kmeans_clus_labels = kmeans.labels_
-        kmeans_pred_labs = clusters_to_labels_voting(full_data, kmeans_clus_labels)
-        kmeans_k_score.append(evaluate(true_labs, kmeans_pred_labs, data, kmeans.cluster_centers_, k)[0]) # [0] because only taking the list of scores because im not gonna mess w matrix
+        # Without target experiments
+        print('Kmeans without target')
+        kmeans_wot = KMeans(n_clusters = k).fit(data)
+        centroids = kmeans_wot.inertia_
+        pred_labs_wot = clusters_to_labels_voting(data, kmeans_wot.labels_, target_data, target)
+        external_scores_list, cont_mat = evaluate_external(target_data, pred_labs_wot)
+        print('[homog, complete, v_measure], cont_mat')
+        print(external_scores_list)
+        print(cont_mat)
+        scores_for_k.extend(external_scores_list)
+        print(scores_for_k)
+        if k == 2:
+            scores = np.array(scores_for_k)
+        else:
+            scores = np.vstack((scores, np.array(scores_for_k)))
     
     print('K-Means Clustering Scores per K: ')
-    print(kmeans_k_score) # print the table of scores
+    print(scores) # print the table of scores
 
-    method_names = ['SSE', 'Adj Rand', 'Norm Mut Info', 'Adj Mut Info', 'Homog', 'Completeness', 'V-Measure']
+    method_names = ['k', 'Adj Rand', 'Norm Mut Info', 'Adj Mut Info', 'Silhuoette', 'Clus_cor', 'Homog', 'Completeness', 'V-Measure']
 
-    return pd.DataFrame(kmeans_k_score, columns = method_names)
+    return pd.DataFrame(scores, columns = method_names)
+
+def graph_method_eval(scores):
+    for i in range(0, scores.shape[1] - 1):
+        plt.figure(i)
+        plt.plot(scores.loc[:, 'k'], scores.iloc[:, i+1])
+        plt.title('{} graphed over varying k'.format(scores.columns[i+1]))
+    plt.show()
 
 if __name__ == '__main__':
     # Delcare target
@@ -156,7 +186,7 @@ if __name__ == '__main__':
     target_data = full_data.loc[:, target].copy()
 
     # transform to pd
-    print('preprocessing')
+    print('Preprocessing')
     full_data_names = full_data.columns
     mms = preprocessing.MinMaxScaler()
     mms_full_data = mms.fit_transform(full_data)
@@ -167,6 +197,13 @@ if __name__ == '__main__':
     data_names = mms_data.columns
     mms_data = mms.fit_transform(mms_data)
     mms_data = pd.DataFrame(mms_data, columns=data_names)
+
+    # Find a semi optimal k by running a lot and returning a matrix of scores
+    scores = method_evaluation(mms_full_data, mms_data, prox_mat, target_data, target = 'sex', optimization_metric = 'Silhuoette')
+    print(scores)
+    graph_method_eval(scores)
+    print('exiting')
+    sys.exit()
 
     # Write directly to experiments:
     # n clusters:
@@ -251,10 +288,6 @@ if __name__ == '__main__':
     print('[homog, complete, v_measure], cont_mat')
     print(external_scores_list)
     print(cont_mat)
-
-    sys.exit()
-
-
 
 # https://scikit-learn.org/stable/auto_examples/cluster/plot_dbscan.html#sphx-glr-auto-examples-cluster-plot-dbscan-py
 # noel read this ^^ really good code that overall i think we should look like
