@@ -15,3 +15,4 @@ def plot_method_eval_from_csv(csv):
 
 if __name__ == '__main__':
     plot_method_eval_from_csv('kmeans_method_eval_scores.csv')
+    plot_method_eval_from_csv('agglom_method_eval_scores.csv')

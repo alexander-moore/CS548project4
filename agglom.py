@@ -28,7 +28,6 @@ def compute_centroids(data, classes):
 
 # Evaluate internal/relative indicies of a clustering given inputs
 def evaluate_internal(true_labs, cluster_labs, pred_labs, data, centroids, prox_mat):
-    #SSE = need_SSE_func(centroids, pred_labs) # centers are given by the methods
     adj_rand = skm.adjusted_rand_score(true_labs, pred_labs)
     norm_info = skm.normalized_mutual_info_score(true_labs, pred_labs)
     adj_info = skm.adjusted_mutual_info_score(true_labs, pred_labs)
@@ -97,10 +96,6 @@ def visualization(data, similarity, corr_mat, cluster_labels, title):
     #plt.title(title)
     #plt.show()
 
-
-
-
-
 # Turns arbitrary cluster labelling [clus1, clus2, ..] into the same type as our target (ex. 1 male 0 female) by getting the mode target of each cluster
 def clusters_to_labels_voting(data, clus_labels, target_labels, target):
 
@@ -124,7 +119,7 @@ def clusters_to_labels_voting(data, clus_labels, target_labels, target):
 # method_evaluation should create, display, and select best scoring K across methods
 def method_evaluation(full_data, data, prox_mat, target_data, target = 'sex', optimization_metric = 'Silhuoette'):
     scores = np.zeros(9)
-    for k in range(2, 50, 3):
+    for k in range(2, 70, 3):
         scores_for_k = [k]
         print('k = ' + str(k))
         # With target experiments
@@ -145,8 +140,7 @@ def method_evaluation(full_data, data, prox_mat, target_data, target = 'sex', op
 
         # Without target experiments
         print('Agglomerative without target')
-        agglom_wot = KMeans(n_clusters = k).fit(data)
-        centroids = compute_centroids(data, agglom_wt.labels_)
+        agglom_wot = AgglomerativeClustering(n_clusters = k).fit(data)
         pred_labs_wot = clusters_to_labels_voting(data, agglom_wot.labels_, target_data, target)
         external_scores_list, cont_mat = evaluate_external(target_data, pred_labs_wot)
         print('[homog, complete, v_measure], cont_mat')
@@ -172,6 +166,16 @@ def graph_method_eval(scores):
         plt.plot(scores.loc[:, 'k'], scores.iloc[:, i+1])
         plt.title('{} graphed over varying k'.format(scores.columns[i+1]))
     plt.show()
+
+def plot_method_eval_from_csv(csv):
+    scores = pd.read_csv(csv)
+    for i in range(0, scores.shape[1] - 1):
+        plt.figure(i)
+        plt.plot(scores.loc[:, 'k'], scores.iloc[:, i+1])
+        plt.title('{} graphed over varying k'.format(scores.columns[i+1]))
+    plt.show()
+
+
 
 if __name__ == '__main__':
     # Delcare target
@@ -200,8 +204,9 @@ if __name__ == '__main__':
 
     # Find a semi optimal k by running a lot and returning a matrix of scores
     scores = method_evaluation(mms_full_data, mms_data, prox_mat, target_data, target = 'sex', optimization_metric = 'Silhuoette')
+    scores.to_csv('agglom_method_eval_scores.csv', index=False)
     print(scores)
-    graph_method_eval(scores)
+    plot_method_eval_from_csv('agglom_method_eval_scores.csv')
     print('exiting')
     sys.exit()
 
