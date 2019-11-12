@@ -124,7 +124,7 @@ def clusters_to_labels_voting(data, clus_labels, target_labels, target):
 # method_evaluation should create, display, and select best scoring K across methods
 def method_evaluation(full_data, data, prox_mat, target_data, target = 'sex', optimization_metric = 'Silhuoette'):
     scores = np.zeros(9)
-    for k in range(2, 50, 3):
+    for k in range(2, 70, 3):
         scores_for_k = [k]
         print('k = ' + str(k))
         # With target experiments
@@ -207,37 +207,37 @@ if __name__ == '__main__':
     mms_data = pd.DataFrame(mms_data, columns=data_names)
 
     # inspect the 299:
-    dbscan = DBSCAN(min_samples = 5, eps = .5).fit(mms_data)
-    print(Counter(dbscan.labels_))
-
-    subset = mms_data[dbscan.labels_ == k] # where K is the 299 cluster
-
-
-
-    # Write directly to experiments:
-    # n clusters:
-    dbscan = DBSCAN(min_samples = 5, eps = 2.3).fit(mms_data)
-    #print(kmeans.inertia_ )
-    print(Counter(dbscan.labels_))
-    #visualization(data = mms_data, similarity = 3, corr_mat = 1, cluster_labels = kmeans_exp1.labels_, title = 'Unsupervised K=2')
-    #[homog, complete, v_measure], cont_mat
-    print(evaluate_external(target_data, clusters_to_labels_voting(mms_full_data, dbscan.labels_, target_data, target)))
-
-    dbscan = DBSCAN(min_samples = 25, eps = 2.3).fit(mms_data)
-    #print(kmeans.inertia_)
-    print(Counter(dbscan.labels_))
-    #visualization(data = mms_data, similarity = 3, corr_mat = 1, cluster_labels = kmeans.labels_, title = 'Unsupervised K=10')
-    print(evaluate_external(target_data, clusters_to_labels_voting(mms_full_data, dbscan.labels_, target_data, target)))
-
-    dbscan = DBSCAN(min_samples = 100, eps = 2.3).fit(mms_data)
-    #print(kmeans.inertia_)
-    print(Counter(dbscan.labels_))
-    #visualization(data = mms_data, similarity = 3, corr_mat = 1, cluster_labels = kmeans_exp3.labels_, title = 'Unsupervised K=20')
-    print(evaluate_external(target_data, clusters_to_labels_voting(mms_full_data, dbscan.labels_, target_data, target)))
-
-    print('exiting')
-    sys.exit()
-    print('didnt get here')
+#    dbscan = DBSCAN(min_samples = 5, eps = .5).fit(mms_data)
+#    print(Counter(dbscan.labels_))
+#
+#    subset = mms_data[dbscan.labels_ == k] # where K is the 299 cluster
+#
+#
+#
+#    # Write directly to experiments:
+#    # n clusters:
+#    dbscan = DBSCAN(min_samples = 5, eps = 2.3).fit(mms_data)
+#    #print(kmeans.inertia_ )
+#    print(Counter(dbscan.labels_))
+#    #visualization(data = mms_data, similarity = 3, corr_mat = 1, cluster_labels = kmeans_exp1.labels_, title = 'Unsupervised K=2')
+#    #[homog, complete, v_measure], cont_mat
+#    print(evaluate_external(target_data, clusters_to_labels_voting(mms_full_data, dbscan.labels_, target_data, target)))
+#
+#    dbscan = DBSCAN(min_samples = 25, eps = 2.3).fit(mms_data)
+#    #print(kmeans.inertia_)
+#    print(Counter(dbscan.labels_))
+#    #visualization(data = mms_data, similarity = 3, corr_mat = 1, cluster_labels = kmeans.labels_, title = 'Unsupervised K=10')
+#    print(evaluate_external(target_data, clusters_to_labels_voting(mms_full_data, dbscan.labels_, target_data, target)))
+#
+#    dbscan = DBSCAN(min_samples = 100, eps = 2.3).fit(mms_data)
+#    #print(kmeans.inertia_)
+#    print(Counter(dbscan.labels_))
+#    #visualization(data = mms_data, similarity = 3, corr_mat = 1, cluster_labels = kmeans_exp3.labels_, title = 'Unsupervised K=20')
+#    print(evaluate_external(target_data, clusters_to_labels_voting(mms_full_data, dbscan.labels_, target_data, target)))
+#
+#    print('exiting')
+#    sys.exit()
+#    print('didnt get here')
 
 
     # Find a semi optimal k by running a lot and returning a matrix of scores
@@ -245,7 +245,7 @@ if __name__ == '__main__':
     scores.to_csv('dbscan_method_eval_scores.csv', index = False)
 
     print(scores)
-    graph_method_eval(scores)
+    #graph_method_eval(scores)
     print('exiting')
     sys.exit()
 
