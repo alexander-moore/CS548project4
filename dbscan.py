@@ -210,20 +210,20 @@ if __name__ == '__main__':
 
     # Write directly to experiments:
     # n clusters:
-    dbscan = DBSCAN(min_samples = 5).fit(mms_data)
+    dbscan = DBSCAN(min_samples = 5, eps = 2.3).fit(mms_data)
     #print(kmeans.inertia_ )
     print(Counter(dbscan.labels_))
     #visualization(data = mms_data, similarity = 3, corr_mat = 1, cluster_labels = kmeans_exp1.labels_, title = 'Unsupervised K=2')
     #[homog, complete, v_measure], cont_mat
     print(evaluate_external(target_data, clusters_to_labels_voting(mms_full_data, dbscan.labels_, target_data, target)))
 
-    dbscan = DBSCAN(min_samples = 25).fit(mms_data)
+    dbscan = DBSCAN(min_samples = 25, eps = 2.3).fit(mms_data)
     #print(kmeans.inertia_)
     print(Counter(dbscan.labels_))
     #visualization(data = mms_data, similarity = 3, corr_mat = 1, cluster_labels = kmeans.labels_, title = 'Unsupervised K=10')
     print(evaluate_external(target_data, clusters_to_labels_voting(mms_full_data, dbscan.labels_, target_data, target)))
 
-    dbscan = DBSCAN(min_samples = 100).fit(mms_data)
+    dbscan = DBSCAN(min_samples = 100, eps = 2.3).fit(mms_data)
     #print(kmeans.inertia_)
     print(Counter(dbscan.labels_))
     #visualization(data = mms_data, similarity = 3, corr_mat = 1, cluster_labels = kmeans_exp3.labels_, title = 'Unsupervised K=20')
