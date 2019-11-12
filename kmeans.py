@@ -74,7 +74,16 @@ def visualization(data, similarity, corr_mat, cluster_labels, title):
     #heat.show()
 
     ## ISOMAP Reduced
-    isom = 
+    isom = Isomap(n_components = 2)
+    isom_data = isom.fit_transform(data)
+
+    isom_df = pd.DataFrame(data = isom_data, columns = ['Dim1', 'Dim2'])
+
+    plt.scatter(isom_df['Dim1'], isom_df['Dim2'], c = cluster_labels, alpha = .5)
+    plt.xlabel('Dim1')
+    plt.ylabel('Dim2')
+    plt.title('K Means of K=8 via ISOMAP')
+    plt.show()
 
     ## Reduced Dimension Visualizations
     pca = PCA(n_components=2)
@@ -209,6 +218,14 @@ if __name__ == '__main__':
     data_names = mms_data.columns
     mms_data = mms.fit_transform(mms_data)
     mms_data = pd.DataFrame(mms_data, columns=data_names)
+
+
+    #
+    kmeans = KMeans(n_clusters = 8).fit(mms_data)
+
+    visualization(data = mms_data, similarity = prox_mat, corr_mat = 1, cluster_labels = kmeans.labels_, title = 'Supervised K-Means (10)')
+
+    sys.exit()
 
     # Find a semi optimal k by running a lot and returning a matrix of scores
     scores = method_evaluation(mms_full_data, mms_data, prox_mat, target_data, target = 'sex', optimization_metric = 'Silhuoette')

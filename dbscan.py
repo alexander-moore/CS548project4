@@ -206,6 +206,12 @@ if __name__ == '__main__':
     mms_data = mms.fit_transform(mms_data)
     mms_data = pd.DataFrame(mms_data, columns=data_names)
 
+    # inspect the 299:
+    dbscan = DBSCAN(min_samples = 5, eps = .5).fit(mms_data)
+    print(Counter(dbscan.labels_))
+
+    subset = mms_data[dbscan.labels_ == k] # where K is the 299 cluster
+
 
 
     # Write directly to experiments:
