@@ -2,6 +2,7 @@
 # cluster.py
 import os, sys
 import sklearn.metrics as skm
+import time
 
 from sklearn import preprocessing
 from sklearn.datasets import load_digits
@@ -27,7 +28,7 @@ def compute_centroids(data, classes):
     return centroid_list
 
 # Evaluate internal/relative indicies of a clustering given inputs
-def evaluate_internal(true_labs, cluster_labs, pred_labs, data, centroids, prox_mat):
+def evaluate_internal(true_labs, cluster_labs, pred_labs, data, prox_mat):
     adj_rand = skm.adjusted_rand_score(true_labs, pred_labs)
     norm_info = skm.normalized_mutual_info_score(true_labs, pred_labs)
     adj_info = skm.adjusted_mutual_info_score(true_labs, pred_labs)
@@ -125,14 +126,11 @@ def method_evaluation(full_data, data, prox_mat, target_data, target = 'sex', op
         # With target experiments
         print('Agglomerative with target')
         agglom_wt = AgglomerativeClustering(n_clusters = k).fit(full_data)
-        centroids = compute_centroids(data, agglom_wt.labels_)
         pred_labs_wt = clusters_to_labels_voting(full_data, agglom_wt.labels_, target_data, target)
-        #def evaluate_internal(true_labs, cluster_labs, pred_labs, data, centroids, prox_mat):
         internal_scores_list = evaluate_internal(true_labs = target_data, 
                                                  cluster_labs = agglom_wt.labels_, 
                                                  pred_labs = pred_labs_wt, 
                                                  data = full_data, 
-                                                 centroids = centroids,
                                                  prox_mat = prox_mat)
         print('[adj_rand, norm_info, adj_info, silhuoette, clus_cor[0,1]]')
         print(internal_scores_list)
@@ -203,96 +201,92 @@ if __name__ == '__main__':
     mms_data = pd.DataFrame(mms_data, columns=data_names)
 
     # Find a semi optimal k by running a lot and returning a matrix of scores
-    scores = method_evaluation(mms_full_data, mms_data, prox_mat, target_data, target = 'sex', optimization_metric = 'Silhuoette')
-    scores.to_csv('agglom_method_eval_scores.csv', index=False)
-    print(scores)
-    plot_method_eval_from_csv('agglom_method_eval_scores.csv')
-    print('exiting')
-    sys.exit()
+#    scores = method_evaluation(mms_full_data, mms_data, prox_mat, target_data, target = 'sex', optimization_metric = 'Silhuoette')
+#    scores.to_csv('agglom_method_eval_scores.csv', index=False)
+#    print(scores)
+#    plot_method_eval_from_csv('agglom_method_eval_scores.csv')
+#    print('exiting')
+#    sys.exit()
 
     # Write directly to experiments:
     # n clusters:
-    agglom = AgglomerativeClustering(n_clusters = 2).fit(mms_full_data)
-    print('some score like SSE here: ', 'SCOREEEEE' )
+    print('Experiment 1')
+    start_time = time.time()
+    agglom = AgglomerativeClustering(n_clusters = 8, linkage='average', affinity = 'cosine').fit(mms_full_data)
+    print('Time: {}'.format(time.time() - start_time))
     print(Counter(agglom.labels_))
     #visualization(data = mms_data, similarity = 3, corr_mat = 1, cluster_labels = kmeans_exp1.labels_, title = 'Unsupervised K=2')
     #[homog, complete, v_measure], cont_mat
-    print(evaluate_external(target_data, clusters_to_labels_voting(mms_full_data, agglom.labels_, target_data, target)))
+    print(evaluate_internal(target_data, agglom.labels_, clusters_to_labels_voting(mms_full_data, agglom.labels_, target_data, target), mms_full_data, prox_mat))
 
-    agglom = AgglomerativeClustering(n_clusters = 10).fit(mms_full_data)
+    print('Experiment 2')
+    start_time = time.time()
+    agglom = AgglomerativeClustering(n_clusters = 8, linkage='complete').fit(mms_full_data)
+    print('Time: {}'.format(time.time() - start_time))
     #print(agglom.inertia_)
     print(Counter(agglom.labels_))
     #visualization(data = mms_data, similarity = 3, corr_mat = 1, cluster_labels = kmeans.labels_, title = 'Unsupervised K=10')
-    print(evaluate_external(target_data, clusters_to_labels_voting(mms_full_data, agglom.labels_, target_data, target)))
+    print(evaluate_internal(target_data, agglom.labels_, clusters_to_labels_voting(mms_full_data, agglom.labels_, target_data, target), mms_full_data, prox_mat))
 
-    agglon = KMeans(n_clusters = 20).fit(mms_full_data)
+    print('Experiment 3')
+    start_time = time.time()
+    agglom = AgglomerativeClustering(n_clusters = 8, linkage='single').fit(mms_full_data)
+    print('Time: {}'.format(time.time() - start_time))
     #print(agglom.inertia_)
     print(Counter(agglom.labels_))
     #visualization(data = mms_data, similarity = 3, corr_mat = 1, cluster_labels = kmeans_exp3.labels_, title = 'Unsupervised K=20')
-    print(evaluate_external(target_data, clusters_to_labels_voting(mms_full_data, agglom.labels_, target_data, target)))
+    print(evaluate_internal(target_data, agglom.labels_, clusters_to_labels_voting(mms_full_data, agglom.labels_, target_data, target), mms_full_data, prox_mat))
+
+    print('Experiment 4')
+    start_time = time.time()
+    agglom = AgglomerativeClustering(n_clusters = 2).fit(mms_data)
+    print('Time: {}'.format(time.time() - start_time))
+    print(Counter(agglom.labels_))
+    #visualization(data = mms_data, similarity = 3, corr_mat = 1, cluster_labels = kmeans_exp1.labels_, title = 'Unsupervised K=2')
+    #[homog, complete, v_measure], cont_mat
+    print(evaluate_external(target_data, clusters_to_labels_voting(mms_data, agglom.labels_, target_data, target)))
+    start_time = time.time()
+    agglom = AgglomerativeClustering(n_clusters = 2).fit(mms_data)
+    print('Time: {}'.format(time.time() - start_time))
+    #print(agglom.inertia_)
+    print(Counter(agglom.labels_))
+    #visualization(data = mms_data, similarity = 3, corr_mat = 1, cluster_labels = kmeans_exp3.labels_, title = 'Unsupervised K=20')
+    print(evaluate_internal(target_data, agglom.labels_, clusters_to_labels_voting(mms_full_data, agglom.labels_, target_data, target), mms_full_data, prox_mat))
+
+    print('Experiment 5')
+    start_time = time.time()
+    agglom = AgglomerativeClustering(n_clusters = 10).fit(mms_data)
+    print('Time: {}'.format(time.time() - start_time))
+    #print(agglom.inertia_)
+    print(Counter(agglom.labels_))
+    #visualization(data = mms_data, similarity = 3, corr_mat = 1, cluster_labels = kmeans.labels_, title = 'Unsupervised K=10')
+    print(evaluate_external(target_data, clusters_to_labels_voting(mms_data, agglom.labels_, target_data, target)))
+    start_time = time.time()
+    agglom = AgglomerativeClustering(n_clusters = 10).fit(mms_data)
+    print('Time: {}'.format(time.time() - start_time))
+    #print(agglom.inertia_)
+    print(Counter(agglom.labels_))
+    #visualization(data = mms_data, similarity = 3, corr_mat = 1, cluster_labels = kmeans_exp3.labels_, title = 'Unsupervised K=20')
+    print(evaluate_internal(target_data, agglom.labels_, clusters_to_labels_voting(mms_full_data, agglom.labels_, target_data, target), mms_full_data, prox_mat))
+
+    print('Experiment 6')
+    start_time = time.time()
+    agglom = AgglomerativeClustering(n_clusters = 60).fit(mms_data)
+    print('Time: {}'.format(time.time() - start_time))
+    #print(agglom.inertia_)
+    print(Counter(agglom.labels_))
+    #visualization(data = mms_data, similarity = 3, corr_mat = 1, cluster_labels = kmeans_exp3.labels_, title = 'Unsupervised K=20')
+    print(evaluate_external(target_data, clusters_to_labels_voting(mms_data, agglom.labels_, target_data, target)))
+    start_time = time.time()
+    agglom = AgglomerativeClustering(n_clusters = 60).fit(mms_data)
+    print('Time: {}'.format(time.time() - start_time))
+    #print(agglom.inertia_)
+    print(Counter(agglom.labels_))
+    #visualization(data = mms_data, similarity = 3, corr_mat = 1, cluster_labels = kmeans_exp3.labels_, title = 'Unsupervised K=20')
+    print(evaluate_internal(target_data, agglom.labels_, clusters_to_labels_voting(mms_full_data, agglom.labels_, target_data, target), mms_full_data, prox_mat))
 
     print('exiting')
     sys.exit()
-    print('didnt get here')
-
-
-    # Run the experiments
-    print('run the experiments')
-    k = 10
-
-    # BTW kmeans gives you kmeans.inertia_, which is SSE
-
-    # With target experiments
-    print('with target')
-    centroids = []
-    agglom_wt = AgglomerativeClustering(n_clusters = k).fit(mms_data)
-    centroids = compute_centroids(mms_data, agglom_wt.labels_)
-    print(agglom_wt)
-    pred_labs_wt = clusters_to_labels_voting(mms_data, agglom_wt.labels_, target_data, target)
-    print('goit pred labs wt')
-    #def evaluate_internal(true_labs, cluster_labs, pred_labs, data, centroids, prox_mat):
-    internal_scores_list = evaluate_internal(true_labs = target_data, 
-                                                           cluster_labs = agglom_wt.labels_, 
-                                                           pred_labs = pred_labs_wt, 
-                                                           data = mms_data, 
-                                                           centroids = centroids,
-                                                           prox_mat = prox_mat)
-    print('[adj_rand, norm_info, adj_info, silhuoette, clus_cor[0,1]]')
-    print(internal_scores_list)
-
-    visualization(data = mms_data, similarity = prox_mat, corr_mat = 1, cluster_labels = agglom_wt.labels_, title = 'Supervised K-Means (10)')
-
-    k = 2
-    print('k = 2:')
-
-    centroids = []
-    agglom_wt = AgglomerativeClustering(n_clusters = k).fit(mms_data)
-    centroids = compute_centroids(mms_data, agglom_wt.labels_)
-    print(agglom_wt)
-    pred_labs_wt = clusters_to_labels_voting(mms_data, agglom_wt.labels_, target_data, target)
-    print('goit pred labs wt')
-    #def evaluate_internal(true_labs, cluster_labs, pred_labs, data, centroids, prox_mat):
-    internal_scores_list = evaluate_internal(true_labs = target_data, 
-                                                           cluster_labs = agglom_wt.labels_, 
-                                                           pred_labs = pred_labs_wt, 
-                                                           data = mms_data, 
-                                                           centroids = centroids,
-                                                           prox_mat = prox_mat)
-    print('[adj_rand, norm_info, adj_info, silhuoette, clus_cor[0,1]]')
-    print(internal_scores_list)
-
-    visualization(data = mms_data, similarity = prox_mat, corr_mat = 1, cluster_labels = agglom_wt.labels_, title = 'Supervised K-Means (2)')
-
-
-    # Without target experiments
-    print('without target')
-    agglom_wot = AgglomerativeClustering(n_clusters = k).fit(mms_full_data)
-    centroids = compute_centroids(mms_full_data, agglom_wt.labels_)
-    pred_labs_wot = clusters_to_labels_voting(mms_full_data, agglom_wot.labels_, target_data, target)
-    external_scores_list, cont_mat = evaluate_external(target_data, pred_labs_wot)
-    print('[homog, complete, v_measure], cont_mat')
-    print(external_scores_list)
-    print(cont_mat)
 
 # https://scikit-learn.org/stable/auto_examples/cluster/plot_dbscan.html#sphx-glr-auto-examples-cluster-plot-dbscan-py
 # noel read this ^^ really good code that overall i think we should look like

@@ -5,6 +5,7 @@ import numpy as np
 
 def plot_method_eval_from_csv(csv):
     scores = pd.read_csv(csv)
+    print(scores)
     plt.figure(1)
     for i in range(0, scores.shape[1] - 1):
         plt_num = 331 + i
@@ -14,5 +15,5 @@ def plot_method_eval_from_csv(csv):
     plt.show()
 
 if __name__ == '__main__':
-    plot_method_eval_from_csv('kmeans_method_eval_scores.csv')
-    plot_method_eval_from_csv('agglom_method_eval_scores.csv')
+    #plot_method_eval_from_csv('result_csvs/kmeans_method_eval_scores.csv')
+    plot_method_eval_from_csv('result_csvs/agglom_method_eval_scores.csv')
