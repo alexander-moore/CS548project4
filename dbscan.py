@@ -166,7 +166,15 @@ def method_evaluation(full_data, data, prox_mat, target_data, target = 'sex', op
 
     return pd.DataFrame(scores, columns = method_names)
 
-def graph_method_eval(scores):
+def plot_method_eval(scores):
+    for i in range(0, scores.shape[1] - 1):
+        plt.figure(i)
+        plt.plot(scores.loc[:, 'k'], scores.iloc[:, i+1])
+        plt.title('{} graphed over varying k'.format(scores.columns[i+1]))
+    plt.show()
+
+def plot_method_eval_from_csv(csv):
+    scores = pd.read_csv(csv)
     for i in range(0, scores.shape[1] - 1):
         plt.figure(i)
         plt.plot(scores.loc[:, 'k'], scores.iloc[:, i+1])

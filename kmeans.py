@@ -27,7 +27,8 @@ def compute_centroids(data, classes):
     return centroid_list
 
 # Evaluate internal/relative indicies of a clustering given inputs
-def evaluate_internal(true_labs, cluster_labs, pred_labs, data, prox_mat):
+def evaluate_internal(true_labs, cluster_labs, pred_labs, data, centroids, prox_mat):
+    #SSE = need_SSE_func(centroids, pred_labs) # centers are given by the methods
     adj_rand = skm.adjusted_rand_score(true_labs, pred_labs)
     norm_info = skm.normalized_mutual_info_score(true_labs, pred_labs)
     adj_info = skm.adjusted_mutual_info_score(true_labs, pred_labs)
@@ -129,13 +130,14 @@ def method_evaluation(full_data, data, prox_mat, target_data, target = 'sex', op
         # With target experiments
         print('Kmeans with target')
         kmeans_wt = KMeans(n_clusters = k).fit(full_data)
-        SSE = kmeans_wt.inertia_
-        scores_for_k.append(SSE)
+        centroids = kmeans_wt.inertia_
         pred_labs_wt = clusters_to_labels_voting(full_data, kmeans_wt.labels_, target_data, target)
+        #def evaluate_internal(true_labs, cluster_labs, pred_labs, data, centroids, prox_mat):
         internal_scores_list = evaluate_internal(true_labs = target_data, 
                                                  cluster_labs = kmeans_wt.labels_, 
                                                  pred_labs = pred_labs_wt, 
                                                  data = full_data, 
+                                                 centroids = centroids,
                                                  prox_mat = prox_mat)
         print('[adj_rand, norm_info, adj_info, silhuoette, clus_cor[0,1]]')
         print(internal_scores_list)
@@ -144,6 +146,7 @@ def method_evaluation(full_data, data, prox_mat, target_data, target = 'sex', op
         # Without target experiments
         print('Kmeans without target')
         kmeans_wot = KMeans(n_clusters = k).fit(data)
+        centroids = kmeans_wot.inertia_
         pred_labs_wot = clusters_to_labels_voting(data, kmeans_wot.labels_, target_data, target)
         external_scores_list, cont_mat = evaluate_external(target_data, pred_labs_wot)
         print('[homog, complete, v_measure], cont_mat')
@@ -159,7 +162,7 @@ def method_evaluation(full_data, data, prox_mat, target_data, target = 'sex', op
     print('K-Means Clustering Scores per K: ')
     print(scores) # print the table of scores
 
-    method_names = ['k', 'SSE', 'Adj Rand', 'Norm Mut Info', 'Adj Mut Info', 'Silhuoette', 'Clus_cor', 'Homog', 'Completeness', 'V-Measure']
+    method_names = ['k', 'Adj Rand', 'Norm Mut Info', 'Adj Mut Info', 'Silhuoette', 'Clus_cor', 'Homog', 'Completeness', 'V-Measure']
 
     return pd.DataFrame(scores, columns = method_names)
 
@@ -208,7 +211,7 @@ if __name__ == '__main__':
     scores.to_csv('kmeans_method_eval_scores.csv', index = False)
     print(scores)
     #plot_method_eval(scores)
-    #plot_method_eval_from_csv('kmeans_method_eval_scores.csv')
+    plot_method_eval_from_csv('kmeans_method_eval_scores.csv')
     print('exiting')
     sys.exit()
 
@@ -246,14 +249,18 @@ if __name__ == '__main__':
 
     # With target experiments
     print('with target')
+    centroids = []
     kmeans_wt = KMeans(n_clusters = k).fit(mms_data)
+    centroids = kmeans_wt.inertia_
     print(kmeans_wt)
     pred_labs_wt = clusters_to_labels_voting(mms_data, kmeans_wt.labels_, target_data, target)
     print('goit pred labs wt')
+    #def evaluate_internal(true_labs, cluster_labs, pred_labs, data, centroids, prox_mat):
     internal_scores_list = evaluate_internal(true_labs = target_data, 
                                                            cluster_labs = kmeans_wt.labels_, 
                                                            pred_labs = pred_labs_wt, 
                                                            data = mms_data, 
+                                                           centroids = centroids,
                                                            prox_mat = prox_mat)
     print('[adj_rand, norm_info, adj_info, silhuoette, clus_cor[0,1]]')
     print(internal_scores_list)
@@ -263,14 +270,18 @@ if __name__ == '__main__':
     k = 2
     print('k = 2:')
 
+    centroids = []
     kmeans_wt = KMeans(n_clusters = k).fit(mms_data)
+    centroids = kmeans_wt.inertia_
     print(kmeans_wt)
     pred_labs_wt = clusters_to_labels_voting(mms_data, kmeans_wt.labels_, target_data, target)
     print('goit pred labs wt')
+    #def evaluate_internal(true_labs, cluster_labs, pred_labs, data, centroids, prox_mat):
     internal_scores_list = evaluate_internal(true_labs = target_data, 
                                                            cluster_labs = kmeans_wt.labels_, 
                                                            pred_labs = pred_labs_wt, 
                                                            data = mms_data, 
+                                                           centroids = centroids,
                                                            prox_mat = prox_mat)
     print('[adj_rand, norm_info, adj_info, silhuoette, clus_cor[0,1]]')
     print(internal_scores_list)
@@ -281,6 +292,7 @@ if __name__ == '__main__':
     # Without target experiments
     print('without target')
     kmeans_wot = KMeans(n_clusters = k).fit(mms_full_data)
+    centroids = kmeans_wot.inertia_
     pred_labs_wot = clusters_to_labels_voting(mms_full_data, kmeans_wot.labels_, target_data, target)
     external_scores_list, cont_mat = evaluate_external(target_data, pred_labs_wot)
     print('[homog, complete, v_measure], cont_mat')
