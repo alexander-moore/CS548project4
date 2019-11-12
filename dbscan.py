@@ -129,7 +129,7 @@ def method_evaluation(full_data, data, prox_mat, target_data, target = 'sex', op
         print('k = ' + str(k))
         # With target experiments
         print('DBSCAN with target')
-        dbscan_wt = DBSCAN(n_clusters = k).fit(full_data)
+        dbscan_wt = DBSCAN(eps = k/400).fit(full_data)
         centroids = compute_centroids(full_data, dbscan_wt.labels_)
         pred_labs_wt = clusters_to_labels_voting(full_data, dbscan_wt.labels_, target_data, target)
         #def evaluate_internal(true_labs, cluster_labs, pred_labs, data, centroids, prox_mat):
@@ -145,7 +145,7 @@ def method_evaluation(full_data, data, prox_mat, target_data, target = 'sex', op
 
         # Without target experiments
         print('DBSCAN without target')
-        dbscan_wot = DBSCAN(n_clusters = k).fit(data)
+        dbscan_wot = DBSCAN(eps = k/400).fit(data)
         centroids = compute_centroids(data, dbscan_wot.labels_)
         pred_labs_wot = clusters_to_labels_voting(data, dbscan_wot.labels_, target_data, target)
         external_scores_list, cont_mat = evaluate_external(target_data, pred_labs_wot)
@@ -198,29 +198,24 @@ if __name__ == '__main__':
     mms_data = mms.fit_transform(mms_data)
     mms_data = pd.DataFrame(mms_data, columns=data_names)
 
-    # Find a semi optimal k by running a lot and returning a matrix of scores
-    scores = method_evaluation(mms_full_data, mms_data, prox_mat, target_data, target = 'sex', optimization_metric = 'Silhuoette')
-    print(scores)
-    graph_method_eval(scores)
-    print('exiting')
-    sys.exit()
+
 
     # Write directly to experiments:
     # n clusters:
-    dbscan = DBSCAN(n_clusters = 2).fit(mms_full_data)
+    dbscan = DBSCAN(min_samples = 5).fit(mms_data)
     #print(kmeans.inertia_ )
     print(Counter(dbscan.labels_))
     #visualization(data = mms_data, similarity = 3, corr_mat = 1, cluster_labels = kmeans_exp1.labels_, title = 'Unsupervised K=2')
     #[homog, complete, v_measure], cont_mat
     print(evaluate_external(target_data, clusters_to_labels_voting(mms_full_data, dbscan.labels_, target_data, target)))
 
-    dbscan = DBSCAN(n_clusters = 10).fit(mms_full_data)
+    dbscan = DBSCAN(min_samples = 25).fit(mms_data)
     #print(kmeans.inertia_)
     print(Counter(dbscan.labels_))
     #visualization(data = mms_data, similarity = 3, corr_mat = 1, cluster_labels = kmeans.labels_, title = 'Unsupervised K=10')
     print(evaluate_external(target_data, clusters_to_labels_voting(mms_full_data, dbscan.labels_, target_data, target)))
 
-    dbscan = DBSCAN(n_clusters = 20).fit(mms_full_data)
+    dbscan = DBSCAN(min_samples = 100).fit(mms_data)
     #print(kmeans.inertia_)
     print(Counter(dbscan.labels_))
     #visualization(data = mms_data, similarity = 3, corr_mat = 1, cluster_labels = kmeans_exp3.labels_, title = 'Unsupervised K=20')
@@ -229,6 +224,16 @@ if __name__ == '__main__':
     print('exiting')
     sys.exit()
     print('didnt get here')
+
+
+    # Find a semi optimal k by running a lot and returning a matrix of scores
+    scores = method_evaluation(mms_full_data, mms_data, prox_mat, target_data, target = 'sex', optimization_metric = 'Silhuoette')
+    scores.to_csv('dbscan_method_eval_scores.csv', index = False)
+
+    print(scores)
+    graph_method_eval(scores)
+    print('exiting')
+    sys.exit()
 
 
     # Run the experiments

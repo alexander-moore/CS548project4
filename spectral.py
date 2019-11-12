@@ -201,7 +201,9 @@ if __name__ == '__main__':
     # Find a semi optimal k by running a lot and returning a matrix of scores
     scores = method_evaluation(mms_full_data, mms_data, prox_mat, target_data, target = 'sex', optimization_metric = 'Silhuoette')
     print(scores)
-    graph_method_eval(scores)
+    scores.to_csv('spectral_method_eval_scores.csv', index = False)
+
+    plot_method_eval_from_csv('spectral_method_eval_scores.csv')
     print('exiting')
     sys.exit()
 
