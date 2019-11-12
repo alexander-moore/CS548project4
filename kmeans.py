@@ -10,6 +10,7 @@ from sklearn.metrics import confusion_matrix
 from sklearn.metrics import fowlkes_mallows_score
 #from sklearn.metrics import matthews_corrcoef
 from sklearn.decomposition import PCA
+from sklearn.manifold import Isomap
 from sklearn.manifold import MDS
 from collections import Counter
 
@@ -71,6 +72,9 @@ def visualization(data, similarity, corr_mat, cluster_labels, title):
     #sim_sorted = similarity.sort_data(by = classes)
     #heat = sns.heatmap(sim_sorted)
     #heat.show()
+
+    ## ISOMAP Reduced
+    isom = 
 
     ## Reduced Dimension Visualizations
     pca = PCA(n_components=2)

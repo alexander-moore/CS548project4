@@ -129,7 +129,7 @@ def method_evaluation(full_data, data, prox_mat, target_data, target = 'sex', op
         print('k = ' + str(k))
         # With target experiments
         print('DBSCAN with target')
-        dbscan_wt = DBSCAN(eps = k/400).fit(full_data)
+        dbscan_wt = DBSCAN(eps = k/200).fit(full_data)
         centroids = compute_centroids(full_data, dbscan_wt.labels_)
         pred_labs_wt = clusters_to_labels_voting(full_data, dbscan_wt.labels_, target_data, target)
         #def evaluate_internal(true_labs, cluster_labs, pred_labs, data, centroids, prox_mat):
@@ -145,7 +145,7 @@ def method_evaluation(full_data, data, prox_mat, target_data, target = 'sex', op
 
         # Without target experiments
         print('DBSCAN without target')
-        dbscan_wot = DBSCAN(eps = k/400).fit(data)
+        dbscan_wot = DBSCAN(eps = k/200).fit(data)
         centroids = compute_centroids(data, dbscan_wot.labels_)
         pred_labs_wot = clusters_to_labels_voting(data, dbscan_wot.labels_, target_data, target)
         external_scores_list, cont_mat = evaluate_external(target_data, pred_labs_wot)
