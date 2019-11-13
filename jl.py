@@ -2,6 +2,7 @@ import pandas as pd
 from sklearn.manifold import Isomap
 from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import MinMaxScaler
+import matplotlib.pyplot as plt
 
 data = pd.read_csv('tiny_cci.csv')
 mms_data = MinMaxScaler().fit_transform(data)
