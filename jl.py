@@ -1,5 +1,5 @@
 import pandas as pd
-from sklearn.manifold import LocallyLinearEmbedding
+from sklearn.manifold import Isomap
 from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import MinMaxScaler
 
@@ -9,7 +9,7 @@ mms_data = MinMaxScaler().fit_transform(data)
 def visualization(data, cluster_labels):
     
     ## ISOMAP Reduced
-    isom = LocallyLinearEmbedding(n_components = 2)
+    isom = Isomap(n_components = 2)
     isom_data = isom.fit_transform(data)
 
     isom_df = pd.DataFrame(data = isom_data, columns = ['Dim1', 'Dim2'])
@@ -33,5 +33,5 @@ def visualization(data, cluster_labels):
     plt.title('THIS IS MDS THIS IS MDS')
     plt.show()
 
-dbscan = DBSCAN(eps = .1).fit(mms_data)
+dbscan = DBSCAN(eps = 2.3).fit(mms_data)
 visualization(mms_data, dbscan.labels_)
