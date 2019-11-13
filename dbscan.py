@@ -218,14 +218,29 @@ if __name__ == '__main__':
     mms_data = pd.DataFrame(mms_data, columns=data_names)
 
     # ISOMAP vis
-    dbscan = DBSCAN(min_samples = 5, eps = .05).fit(mms_full_data)
-    visualization(mms_full_data, 1, 1, dbscan.labels_, 'DBSCAN for eps = .05, min_samples = 5 via ISOMAP')
+    #visualization(mms_full_data, 1, 1, dbscan.labels_, 'DBSCAN for eps = 1, min_samples = 5 via ISOMAP')
 
     # inspect the 299:
-#    dbscan = DBSCAN(min_samples = 5, eps = .5).fit(mms_data)
-#    print(Counter(dbscan.labels_))
-#
-#    subset = mms_data[dbscan.labels_ == k] # where K is the 299 cluster
+    dbscan = DBSCAN(min_samples = 100, eps = .5).fit(mms_full_data)
+
+    print(Counter(dbscan.labels_))
+
+    subset = mms_full_data[dbscan.labels_ == 1] # where K is the 299 cluster
+    print(subset)
+    print(subset.shape)
+
+    desc = mms_full_data.describe()
+    it = desc.shape[1]
+
+    for i in range(it):
+        print(desc[desc.columns[i]])
+
+    #now for the orig:
+    desc = subset.describe()
+    it = desc.shape[1]
+
+    for i in range(it):
+        print(desc[desc.columns[i]])
 #
 #
 #
