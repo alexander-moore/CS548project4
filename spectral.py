@@ -10,6 +10,7 @@ from sklearn.metrics import confusion_matrix
 from sklearn.metrics import fowlkes_mallows_score
 #from sklearn.metrics import matthews_corrcoef
 from sklearn.decomposition import PCA
+from sklearn.manifold import Isomap
 from sklearn.manifold import MDS
 from collections import Counter
 
@@ -62,7 +63,7 @@ def evaluate_external(true_labs, pred_labs):
     v_measure = skm.v_measure_score(true_labs, pred_labs)
     cont_mat = skm.cluster.contingency_matrix(true_labs, pred_labs)
     return [homog, complete, v_measure], cont_mat
-    
+
 def visualization(data, similarity, corr_mat, cluster_labels, title):
     print('hi. welcome to visualization:')
 
@@ -71,6 +72,18 @@ def visualization(data, similarity, corr_mat, cluster_labels, title):
     #sim_sorted = similarity.sort_data(by = classes)
     #heat = sns.heatmap(sim_sorted)
     #heat.show()
+
+    ## ISOMAP Reduced
+    isom = Isomap(n_components = 2)
+    isom_data = isom.fit_transform(data)
+
+    isom_df = pd.DataFrame(data = isom_data, columns = ['Dim1', 'Dim2'])
+
+    plt.scatter(isom_df['Dim1'], isom_df['Dim2'], c = cluster_labels, alpha = .5)
+    plt.xlabel('Dim1')
+    plt.ylabel('Dim2')
+    plt.title('Spectral of K=8 via ISOMAP')
+    plt.show()
 
     ## Reduced Dimension Visualizations
     pca = PCA(n_components=2)
@@ -96,6 +109,7 @@ def visualization(data, similarity, corr_mat, cluster_labels, title):
     #plt.ylabel('MDS dim 2')
     #plt.title(title)
     #plt.show()
+
 
 
 
@@ -188,7 +202,7 @@ if __name__ == '__main__':
     # Load the data here
     print('loading...')
     full_data = pd.read_csv('tiny_cci.csv')
-    prox_mat = pd.read_csv('tiny_prox_mat.csv')
+    #prox_mat = pd.read_csv('tiny_prox_mat.csv')
     print('loaded')
 
     target_data = full_data.loc[:, target].copy()
@@ -205,6 +219,10 @@ if __name__ == '__main__':
     data_names = mms_data.columns
     mms_data = mms.fit_transform(mms_data)
     mms_data = pd.DataFrame(mms_data, columns=data_names)
+
+
+    spectral = SpectralClustering(n_clusters = 36).fit(mms_full_data)
+    visualization(mms_full_data, 1, 1, spectral.labels_, title = 'SpectralClustering 36 clusters via Isomap')
 
     # Find a semi optimal k by running a lot and returning a matrix of scores
     plot_method_eval_from_csv('spectral_method_eval_scores.csv')

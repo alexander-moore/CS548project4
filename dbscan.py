@@ -11,6 +11,7 @@ from sklearn.metrics import fowlkes_mallows_score
 #from sklearn.metrics import matthews_corrcoef
 from sklearn.decomposition import PCA
 from sklearn.manifold import MDS
+from sklearn.manifold import Isomap
 from collections import Counter
 
 import matplotlib.pyplot as plt
@@ -72,8 +73,20 @@ def visualization(data, similarity, corr_mat, cluster_labels, title):
     #heat = sns.heatmap(sim_sorted)
     #heat.show()
 
+    ## ISOMAP Reduced
+    isom = Isomap(n_components = 2)
+    isom_data = isom.fit_transform(data)
+
+    isom_df = pd.DataFrame(data = isom_data, columns = ['Dim1', 'Dim2'])
+
+    plt.scatter(isom_df['Dim1'], isom_df['Dim2'], c = cluster_labels, alpha = .5)
+    plt.xlabel('Dim1')
+    plt.ylabel('Dim2')
+    plt.title('DBSCAN of eps=.05, min_samples = 5 via ISOMAP')
+    plt.show()
+
     ## Reduced Dimension Visualizations
-    pca = PCA(n_components=2)
+    pca = MDS(n_components=2)
     pca_data = pca.fit_transform(data)
 
     pca_df = pd.DataFrame(data = pca_data, columns = ['PC1', 'PC2'])
@@ -82,7 +95,7 @@ def visualization(data, similarity, corr_mat, cluster_labels, title):
     plt.scatter(pca_df['PC1'], pca_df['PC2'], c = cluster_labels, alpha = .5)
     plt.xlabel('PC1')
     plt.ylabel('PC2')
-    plt.title(title)
+    plt.title('THIS IS MDS THIS IS MDS')
     plt.show()
 
     # nonparametric MDS takes a long time, only run if you have to
@@ -96,8 +109,6 @@ def visualization(data, similarity, corr_mat, cluster_labels, title):
     #plt.ylabel('MDS dim 2')
     #plt.title(title)
     #plt.show()
-
-
 
 
 
@@ -188,7 +199,7 @@ if __name__ == '__main__':
     # Load the data here
     print('loading...')
     full_data = pd.read_csv('tiny_cci.csv')
-    prox_mat = pd.read_csv('tiny_prox_mat.csv')
+    #prox_mat = pd.read_csv('tiny_prox_mat.csv')
     print('loaded')
 
     target_data = full_data.loc[:, target].copy()
@@ -205,6 +216,10 @@ if __name__ == '__main__':
     data_names = mms_data.columns
     mms_data = mms.fit_transform(mms_data)
     mms_data = pd.DataFrame(mms_data, columns=data_names)
+
+    # ISOMAP vis
+    dbscan = DBSCAN(min_samples = 5, eps = .05).fit(mms_full_data)
+    visualization(mms_full_data, 1, 1, dbscan.labels_, 'DBSCAN for eps = .05, min_samples = 5 via ISOMAP')
 
     # inspect the 299:
     dbscan = DBSCAN(min_samples = 5, eps = .5).fit(mms_data)

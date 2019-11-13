@@ -10,6 +10,7 @@ from sklearn.metrics import confusion_matrix
 from sklearn.metrics import fowlkes_mallows_score
 #from sklearn.metrics import matthews_corrcoef
 from sklearn.decomposition import PCA
+from sklearn.manifold import Isomap
 from sklearn.manifold import MDS
 from collections import Counter
 
@@ -71,6 +72,18 @@ def visualization(data, similarity, corr_mat, cluster_labels, title):
     #heat = sns.heatmap(sim_sorted)
     #heat.show()
 
+    ## ISOMAP Reduced
+    isom = Isomap(n_components = 2)
+    isom_data = isom.fit_transform(data)
+
+    isom_df = pd.DataFrame(data = isom_data, columns = ['Dim1', 'Dim2'])
+
+    plt.scatter(isom_df['Dim1'], isom_df['Dim2'], c = cluster_labels, alpha = .5)
+    plt.xlabel('Dim1')
+    plt.ylabel('Dim2')
+    plt.title('K Means of K=8 via ISOMAP')
+    plt.show()
+
     ## Reduced Dimension Visualizations
     pca = PCA(n_components=2)
     pca_data = pca.fit_transform(data)
@@ -95,6 +108,7 @@ def visualization(data, similarity, corr_mat, cluster_labels, title):
     #plt.ylabel('MDS dim 2')
     #plt.title(title)
     #plt.show()
+
 
 # Turns arbitrary cluster labelling [clus1, clus2, ..] into the same type as our target (ex. 1 male 0 female) by getting the mode target of each cluster
 def clusters_to_labels_voting(data, clus_labels, target_labels, target):
@@ -184,7 +198,7 @@ if __name__ == '__main__':
     # Load the data here
     print('loading...')
     full_data = pd.read_csv('tiny_cci.csv')
-    prox_mat = pd.read_csv('tiny_prox_mat.csv')
+    #prox_mat = pd.read_csv('tiny_prox_mat.csv')
     print('loaded')
 
     target_data = full_data.loc[:, target].copy()
@@ -201,6 +215,9 @@ if __name__ == '__main__':
     data_names = mms_data.columns
     mms_data = mms.fit_transform(mms_data)
     mms_data = pd.DataFrame(mms_data, columns=data_names)
+
+    agglom = AgglomerativeClustering(n_clusters = 8).fit(mms_full_data)
+    visualization(mms_data, 1, 1, agglom.labels_, title = 'AgglomerativeClustering with 8 clusters by ISOMAP')
 
     # Find a semi optimal k by running a lot and returning a matrix of scores
     scores = method_evaluation(mms_full_data, mms_data, prox_mat, target_data, target = 'sex', optimization_metric = 'Silhuoette')
