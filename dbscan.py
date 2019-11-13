@@ -13,6 +13,7 @@ from sklearn.decomposition import PCA
 from sklearn.manifold import MDS
 from sklearn.manifold import Isomap
 from collections import Counter
+import time
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -199,7 +200,7 @@ if __name__ == '__main__':
     # Load the data here
     print('loading...')
     full_data = pd.read_csv('tiny_cci.csv')
-    #prox_mat = pd.read_csv('tiny_prox_mat.csv')
+    prox_mat = pd.read_csv('tiny_prox_mat.csv')
     print('loaded')
 
     target_data = full_data.loc[:, target].copy()
@@ -216,114 +217,89 @@ if __name__ == '__main__':
     data_names = mms_data.columns
     mms_data = mms.fit_transform(mms_data)
     mms_data = pd.DataFrame(mms_data, columns=data_names)
+    print('min = 5')
 
-    # ISOMAP vis
-    #visualization(mms_full_data, 1, 1, dbscan.labels_, 'DBSCAN for eps = 1, min_samples = 5 via ISOMAP')
+    start_time = time.time()
 
-    # inspect the 299:
-    dbscan = DBSCAN(min_samples = 100, eps = .5).fit(mms_full_data)
+    centroids = []
+    dbscan = DBSCAN(min_samples = 5).fit(mms_data)
+    centroids = compute_centroids(mms_data, dbscan.labels_)
+    pred_labs = clusters_to_labels_voting(mms_data, dbscan.labels_, target_data, target)
+    print('goit pred labs wt')
+    #def evaluate_internal(true_labs, cluster_labs, pred_labs, data, centroids, prox_mat):
+    internal_scores_list = evaluate_internal(true_labs = target_data, 
+                                                           cluster_labs = dbscan.labels_, 
+                                                           pred_labs = pred_labs, 
+                                                           data = mms_data, 
+                                                           centroids = centroids,
+                                                           prox_mat = prox_mat)
 
-    print(Counter(dbscan.labels_))
+    external_scores_list, cont_mat = evaluate_external(target_data, pred_labs)
+    print('int')
+    print(internal_scores_list)
+    print('ex')
+    print(external_scores_list)
 
-    subset = mms_full_data[dbscan.labels_ == 1] # where K is the 299 cluster
-    print(subset)
-    print(subset.shape)
+    print('time: ', time.time() - start_time)
 
-    desc = mms_full_data.describe()
-    it = desc.shape[1]
+    print('min = 25')
 
-    for i in range(it):
-        print(desc[desc.columns[i]])
+    start_time = time.time()
 
-    #now for the orig:
-    desc = subset.describe()
-    it = desc.shape[1]
+    centroids = []
+    dbscan = DBSCAN(min_samples = 25).fit(mms_data)
+    centroids = compute_centroids(mms_data, dbscan.labels_)
+    pred_labs = clusters_to_labels_voting(mms_data, dbscan.labels_, target_data, target)
+    print('goit pred labs wt')
+    #def evaluate_internal(true_labs, cluster_labs, pred_labs, data, centroids, prox_mat):
+    internal_scores_list = evaluate_internal(true_labs = target_data, 
+                                                           cluster_labs = dbscan.labels_, 
+                                                           pred_labs = pred_labs, 
+                                                           data = mms_data, 
+                                                           centroids = centroids,
+                                                           prox_mat = prox_mat)
 
-    for i in range(it):
-        print(desc[desc.columns[i]])
-#
-#
-#
-#    # Write directly to experiments:
-#    # n clusters:
-#    dbscan = DBSCAN(min_samples = 5, eps = 2.3).fit(mms_data)
-#    #print(kmeans.inertia_ )
-#    print(Counter(dbscan.labels_))
-#    #visualization(data = mms_data, similarity = 3, corr_mat = 1, cluster_labels = kmeans_exp1.labels_, title = 'Unsupervised K=2')
-#    #[homog, complete, v_measure], cont_mat
-#    print(evaluate_external(target_data, clusters_to_labels_voting(mms_full_data, dbscan.labels_, target_data, target)))
-#
-#    dbscan = DBSCAN(min_samples = 25, eps = 2.3).fit(mms_data)
-#    #print(kmeans.inertia_)
-#    print(Counter(dbscan.labels_))
-#    #visualization(data = mms_data, similarity = 3, corr_mat = 1, cluster_labels = kmeans.labels_, title = 'Unsupervised K=10')
-#    print(evaluate_external(target_data, clusters_to_labels_voting(mms_full_data, dbscan.labels_, target_data, target)))
-#
-#    dbscan = DBSCAN(min_samples = 100, eps = 2.3).fit(mms_data)
-#    #print(kmeans.inertia_)
-#    print(Counter(dbscan.labels_))
-#    #visualization(data = mms_data, similarity = 3, corr_mat = 1, cluster_labels = kmeans_exp3.labels_, title = 'Unsupervised K=20')
-#    print(evaluate_external(target_data, clusters_to_labels_voting(mms_full_data, dbscan.labels_, target_data, target)))
-#
-#    print('exiting')
-#    sys.exit()
-#    print('didnt get here')
+    external_scores_list, cont_mat = evaluate_external(target_data, pred_labs)
+    print('int')
+    print(internal_scores_list)
+    print('ex')
+    print(external_scores_list)
+
+    print('time: ', time.time() - start_time)
 
 
-    # Find a semi optimal k by running a lot and returning a matrix of scores
-    scores = method_evaluation(mms_full_data, mms_data, prox_mat, target_data, target = 'sex', optimization_metric = 'Silhuoette')
-    scores.to_csv('dbscan_method_eval_scores.csv', index = False)
+    print('min = 100')
 
-    print(scores)
-    #graph_method_eval(scores)
-    print('exiting')
+    start_time = time.time()
+
+    centroids = []
+    dbscan = DBSCAN(min_samples = 100).fit(mms_data)
+    centroids = compute_centroids(mms_data, dbscan.labels_)
+    pred_labs = clusters_to_labels_voting(mms_data, dbscan.labels_, target_data, target)
+    print('goit pred labs wt')
+    #def evaluate_internal(true_labs, cluster_labs, pred_labs, data, centroids, prox_mat):
+    internal_scores_list = evaluate_internal(true_labs = target_data, 
+                                                           cluster_labs = dbscan.labels_, 
+                                                           pred_labs = pred_labs, 
+                                                           data = mms_data, 
+                                                           centroids = centroids,
+                                                           prox_mat = prox_mat)
+
+    external_scores_list, cont_mat = evaluate_external(target_data, pred_labs)
+    print('int')
+    print(internal_scores_list)
+    print('ex')
+    print(external_scores_list)
+
+    print('time: ', time.time() - start_time)
+
+
+
+
+
+
     sys.exit()
 
-
-    # Run the experiments
-    print('run the experiments')
-    k = 10
-
-    # BTW kmeans gives you kmeans.inertia_, which is SSE
-
-    # With target experiments
-    print('with target')
-    centroids = []
-    dbscan_wt = DBSCAN(n_clusters = k).fit(mms_data)
-    centroids = compute_centroids(dbscan_wt.labels_)
-    print(dbscan_wt)
-    pred_labs_wt = clusters_to_labels_voting(mms_data, dbscan_wt.labels_, target_data, target)
-    print('goit pred labs wt')
-    #def evaluate_internal(true_labs, cluster_labs, pred_labs, data, centroids, prox_mat):
-    internal_scores_list = evaluate_internal(true_labs = target_data, 
-                                                           cluster_labs = dbscan_wt.labels_, 
-                                                           pred_labs = pred_labs_wt, 
-                                                           data = mms_data, 
-                                                           centroids = centroids,
-                                                           prox_mat = prox_mat)
-    print('[adj_rand, norm_info, adj_info, silhuoette, clus_cor[0,1]]')
-    print(internal_scores_list)
-
-    visualization(data = mms_data, similarity = prox_mat, corr_mat = 1, cluster_labels = dbscan_wt.labels_, title = 'Supervised K-Means (10)')
-
-    k = 2
-    print('k = 2:')
-
-    centroids = []
-    dbscan_wt = DBSCAN(n_clusters = k).fit(mms_data)
-    centroids = compute_centroids(mms_data, dbscan_wt.labels_)
-    print(dbscan_wt)
-    pred_labs_wt = clusters_to_labels_voting(mms_data, dbscan_wt.labels_, target_data, target)
-    print('goit pred labs wt')
-    #def evaluate_internal(true_labs, cluster_labs, pred_labs, data, centroids, prox_mat):
-    internal_scores_list = evaluate_internal(true_labs = target_data, 
-                                                           cluster_labs = dbscan_wt.labels_, 
-                                                           pred_labs = pred_labs_wt, 
-                                                           data = mms_data, 
-                                                           centroids = centroids,
-                                                           prox_mat = prox_mat)
-    print('[adj_rand, norm_info, adj_info, silhuoette, clus_cor[0,1]]')
-    print(internal_scores_list)
 
     visualization(data = mms_data, similarity = prox_mat, corr_mat = 1, cluster_labels = dbscan_wt.labels_, title = 'Supervised K-Means (2)')
 
@@ -333,7 +309,6 @@ if __name__ == '__main__':
     dbscan_wot = DBSCAN(n_clusters = k).fit(mms_full_data)
     centroids = compute_centroids(mms_full_data, dbscan_wot.labels_)
     pred_labs_wot = clusters_to_labels_voting(mms_full_data, dbscan_wot.labels_, target_data, target)
-    external_scores_list, cont_mat = evaluate_external(target_data, pred_labs_wot)
     print('[homog, complete, v_measure], cont_mat')
     print(external_scores_list)
     print(cont_mat)
