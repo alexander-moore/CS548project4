@@ -222,22 +222,22 @@ if __name__ == '__main__':
     start_time = time.time()
 
     centroids = []
-    dbscan = DBSCAN(min_samples = 5).fit(mms_data)
-    centroids = compute_centroids(mms_data, dbscan.labels_)
+    dbscan = DBSCAN(min_samples = 5).fit(mms_full_data)
+    centroids = compute_centroids(mms_full_data, dbscan.labels_)
     pred_labs = clusters_to_labels_voting(mms_data, dbscan.labels_, target_data, target)
     print('goit pred labs wt')
     #def evaluate_internal(true_labs, cluster_labs, pred_labs, data, centroids, prox_mat):
     internal_scores_list = evaluate_internal(true_labs = target_data, 
                                                            cluster_labs = dbscan.labels_, 
                                                            pred_labs = pred_labs, 
-                                                           data = mms_data, 
+                                                           data = mms_full_data, 
                                                            centroids = centroids,
                                                            prox_mat = prox_mat)
 
     external_scores_list, cont_mat = evaluate_external(target_data, pred_labs)
-    print('int')
+    print('int     return [adj_rand, norm_info, adj_info, silhuoette, clus_cor[0,1]]')
     print(internal_scores_list)
-    print('ex')
+    print('ex     return [homog, complete, v_measure], cont_mat')
     print(external_scores_list)
 
     print('time: ', time.time() - start_time)
@@ -247,15 +247,15 @@ if __name__ == '__main__':
     start_time = time.time()
 
     centroids = []
-    dbscan = DBSCAN(min_samples = 25).fit(mms_data)
-    centroids = compute_centroids(mms_data, dbscan.labels_)
-    pred_labs = clusters_to_labels_voting(mms_data, dbscan.labels_, target_data, target)
+    dbscan = DBSCAN(min_samples = 25).fit(mms_full_data)
+    centroids = compute_centroids(mms_full_data, dbscan.labels_)
+    pred_labs = clusters_to_labels_voting(mms_full_data, dbscan.labels_, target_data, target)
     print('goit pred labs wt')
     #def evaluate_internal(true_labs, cluster_labs, pred_labs, data, centroids, prox_mat):
     internal_scores_list = evaluate_internal(true_labs = target_data, 
                                                            cluster_labs = dbscan.labels_, 
                                                            pred_labs = pred_labs, 
-                                                           data = mms_data, 
+                                                           data = mms_full_data, 
                                                            centroids = centroids,
                                                            prox_mat = prox_mat)
 
@@ -273,15 +273,15 @@ if __name__ == '__main__':
     start_time = time.time()
 
     centroids = []
-    dbscan = DBSCAN(min_samples = 100).fit(mms_data)
-    centroids = compute_centroids(mms_data, dbscan.labels_)
-    pred_labs = clusters_to_labels_voting(mms_data, dbscan.labels_, target_data, target)
+    dbscan = DBSCAN(min_samples = 100).fit(mms_full_data)
+    centroids = compute_centroids(mms_full_data, dbscan.labels_)
+    pred_labs = clusters_to_labels_voting(mms_full_data, dbscan.labels_, target_data, target)
     print('goit pred labs wt')
     #def evaluate_internal(true_labs, cluster_labs, pred_labs, data, centroids, prox_mat):
     internal_scores_list = evaluate_internal(true_labs = target_data, 
                                                            cluster_labs = dbscan.labels_, 
                                                            pred_labs = pred_labs, 
-                                                           data = mms_data, 
+                                                           data = mms_full_data, 
                                                            centroids = centroids,
                                                            prox_mat = prox_mat)
 
